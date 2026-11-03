@@ -188,7 +188,7 @@ function blocked(x,z){if(Math.abs(x)>W/2-.6||Math.abs(z)>D/2-.6)return true;retu
 /* Сеть и игроки */
 let authed=false,myName='',myK=0,labelObj=null,db=null,room=null,dbPhotos=[],dbIds=[],lastSent=0,lastKey='';const remotes=new Map();
 const SH=[0xc0392b,0x2f5d8a,0x2e8b57,0xd4a017,0x8e44ad,0xe67e22,0x16a085,0xd35d8c],PA=[0x2b2b34,0x3d4a63,0x5a4630,0x333f33,0x4a2f4a,0x6b6b6b],HA=[0x2a1c12,0x0e0e0e,0x7a4a21,0xc9a35a,0x8a8a8a],SK=[0xe0b08c,0xf1c9a5,0xc68642,0x8d5524];
-const look=k=>({shirt:SH[k%8],pants:PA[(k*3+1)%6],hair:HA[(k*5+2)%5],skin:SK[(k*7+3)%4]});
+const lookOf=k=>({shirt:SH[k%8],pants:PA[(k*3+1)%6],hair:HA[(k*5+2)%5],skin:SK[(k*7+3)%4]});
 try{document.getElementById('nm').value=localStorage.getItem('hm-name')||''}catch(e){}
 document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('go').click()});
 function label(name){const c=cvs(512,128),x=c.getContext('2d');x.fillStyle='rgba(20,18,24,.7)';x.beginPath();if(x.roundRect)x.roundRect(8,20,496,88,44);else x.rect(8,20,496,88);x.fill();x.fillStyle='#fff';x.font='600 54px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(name.slice(0,16),256,66);const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true}));s.scale.set(1.5,.375,1);s.position.y=2.1;s.renderOrder=10;return s}
@@ -199,7 +199,7 @@ function makeAvatar(l){const g=new THREE.Group(),M=c=>new THREE.MeshStandardMate
  add(new THREE.SphereGeometry(.018,8,8),hr,-.055,1.7,.125);add(new THREE.SphereGeometry(.018,8,8),hr,.055,1.7,.125);
  const limb=(x,y,len,r,m,foot)=>{const p=new THREE.Group();p.position.set(x,y,0);g.add(p);add(new THREE.CylinderGeometry(r,r*.9,len,10),m,0,-len/2,0,p);if(foot)add(new THREE.BoxGeometry(.13,.07,.24),so,0,-len-.02,.05,p);else add(new THREE.SphereGeometry(r*.95,10,8),sk,0,-len,0,p);return p};
  return {g,armL:limb(-.27,1.42,.55,.055,sh),armR:limb(.27,1.42,.55,.055,sh),legL:limb(-.1,.85,.85,.075,pa,1),legR:limb(.1,.85,.85,.075,pa,1)}}
-function applyLook(){const L=look(myK);shirt.color.set(L.shirt);pants.color.set(L.pants);hairM.color.set(L.hair);skin.color.set(L.skin);if(labelObj)avatar.remove(labelObj);labelObj=label(myName);avatar.add(labelObj)}
+function applyLook(){const L=lookOf(myK);shirt.color.set(L.shirt);pants.color.set(L.pants);hairM.color.set(L.hair);skin.color.set(L.skin);if(labelObj)avatar.remove(labelObj);labelObj=label(myName);avatar.add(labelObj)}
 function updWho(){const n=[...remotes.values()].map(r=>r.n).filter(Boolean);document.getElementById('who').textContent='🏛 Домашний музей'+(n.length?' · в зале: вы, '+n.join(', '):'')}
 async function saveShared(add){if(!db)return false;try{const free=Math.max(0,slots.length-dbPhotos.length);if(!free)return false;let i=0;for(const r of add.slice(0,free)){i++;await db.doc('photos/p'+Date.now()+'_'+i).set({src:r.src,title:r.title,ts:Date.now()+i})}return true}catch(e){return false}}
 async function connect(){
@@ -207,13 +207,13 @@ async function connect(){
  try{room=await claude.use('room')}catch(e){room=null}
  try{db=await claude.use('db')}catch(e){db=null}
  if(db){try{db.collection('photos').onSnapshot(async s=>{const rows=s.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.src).sort((a,b)=>(a.ts||0)-(b.ts||0));dbIds=rows.map(r=>r.id);dbPhotos=rows;if(rows.length)buildGallery(await fromRecords(rows));else if(!records.length)buildGallery(await Promise.all([0,1,2,3,4,5].map(demoArt)))},()=>{})}catch(e){}}
- if(room){room.onPeers(ch=>{const ids=new Set();ch.peers.forEach(p=>{const pr=p.presence||{};if(p.isMe||pr.x===undefined)return;ids.add(p.peer);let r=remotes.get(p.peer);if(!r){const a=makeAvatar(look(pr.k|0));a.g.add(label(pr.n||'Гость'));a.g.position.set(pr.x,0,pr.z);scene.add(a.g);r={a,n:pr.n,face:pr.f||0,speed:0,t:0,dt:0};remotes.set(p.peer,r)}r.tx=pr.x;r.tz=pr.z;r.tf=pr.f||0;r.s=pr.s||0;r.n=pr.n});remotes.forEach((r,id)=>{if(!ids.has(id)){scene.remove(r.a.g);remotes.delete(id)}});updWho()})}
+ if(room){room.onPeers(ch=>{const ids=new Set();ch.peers.forEach(p=>{const pr=p.presence||{};if(p.isMe||pr.x===undefined)return;ids.add(p.peer);let r=remotes.get(p.peer);if(!r){const a=makeAvatar(lookOf(pr.k|0));a.g.add(label(pr.n||'Гость'));a.g.position.set(pr.x,0,pr.z);scene.add(a.g);r={a,n:pr.n,face:pr.f||0,speed:0,t:0,dt:0};remotes.set(p.peer,r)}r.tx=pr.x;r.tz=pr.z;r.tf=pr.f||0;r.s=pr.s||0;r.n=pr.n});remotes.forEach((r,id)=>{if(!ids.has(id)){scene.remove(r.a.g);remotes.delete(id)}});updWho()})}
 }
 let clrArm=0;document.getElementById('clearBtn').onclick=async e=>{const b=e.target;if(!clrArm){clrArm=1;b.textContent='Точно?';setTimeout(()=>{clrArm=0;b.textContent='🗑 Очистить'},3000);return}clrArm=0;b.textContent='🗑 Очистить';records=[];dbSet(records);if(db){try{for(const id of dbIds)await db.doc('photos/'+id).delete()}catch(x){}}recItems=[];compose()};
 /* P2P через PeerJS: первый вошедший становится хабом, остальные подключаются к нему */
 const myId=Math.random().toString(36).slice(2,10),hubId='hm-'+(location.host+location.pathname).replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,40)+'-hub';
 let peerObj=null,hubConns=new Map(),upConn=null,isHub=false,retrying=false;const lastStates=new Map(),stale=new Map();
-function onState(id,pr){if(id===myId||pr.x===undefined)return;stale.set(id,performance.now());let r=remotes.get(id);if(!r){const a=makeAvatar(look(pr.k|0));a.g.add(label(pr.n||'Гость'));a.g.position.set(pr.x,0,pr.z);scene.add(a.g);r={a,n:pr.n,face:pr.f||0,speed:0,t:0,dt:0};remotes.set(id,r);updWho()}r.tx=pr.x;r.tz=pr.z;r.tf=pr.f||0;r.s=pr.s||0;r.n=pr.n}
+function onState(id,pr){if(id===myId||pr.x===undefined)return;stale.set(id,performance.now());let r=remotes.get(id);if(!r){const a=makeAvatar(lookOf(pr.k|0));a.g.add(label(pr.n||'Гость'));a.g.position.set(pr.x,0,pr.z);scene.add(a.g);r={a,n:pr.n,face:pr.f||0,speed:0,t:0,dt:0};remotes.set(id,r);updWho()}r.tx=pr.x;r.tz=pr.z;r.tf=pr.f||0;r.s=pr.s||0;r.n=pr.n}
 function onLeave(id){const r=remotes.get(id);if(r){scene.remove(r.a.g);remotes.delete(id);updWho()}stale.delete(id)}
 const liveList=[];
 function addLive(m){if(!m.pid||!m.src||liveList.some(p=>p.pid===m.pid))return false;liveList.push(m);if(m.from!==myId)tryImg(m.src).then(img=>{if(img){liveItems.push({img,title:m.title,pid:m.pid,from:m.from});compose()}});return true}
@@ -276,3 +276,4 @@ function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta()
 frame();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 </script></body></html>
+
