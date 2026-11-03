@@ -22,30 +22,22 @@ button:active{transform:scale(.96)}
 
 input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px;width:210px;text-align:center}
 
-/* Экранные кнопки (ПК и мобилки) */
 #acts{position:fixed;right:12px;bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:4;align-items:flex-end}
-#acts button{margin:0;font-size:14px;padding:12px 16px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#acts button{margin:0;font-size:14px;padding:12px 16px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none}
 
-/* Главная кнопка действия (смотреть/взять/пожать руку) */
 #actionBtn{position:fixed;right:16px;bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:5;padding:16px 24px;font-size:16px;border-radius:20px;background:var(--ac);color:#111;font-weight:bold;box-shadow:0 6px 20px rgba(232,194,122,.4);display:none;border:2px solid #fff}
 #actionBtn:active{transform:scale(.95)}
 
-/* Джойстик */
 #stick{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;display:none;z-index:4;touch-action:none;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
 #knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 
-/* Подсказки на ПК (внизу) */
 #hint{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:12px 20px;display:none;z-index:3;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.7);border-radius:20px}
 #hint b{color:var(--ac)}
-#hint .sub{font-size:12px;opacity:.7;font-weight:normal;display:block;margin-top:4px}
 
-/* Просмотр картины */
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:8;padding:16px}
 #lb img{max-width:94vw;max-height:80vh;border:10px solid #f3efe6;box-shadow:0 20px 60px #000;border-radius:4px}
-#lb .lb-controls{margin-top:14px;display:flex;gap:10px;align-items:center}
-#lbCloseBtn{background:#fff;color:#000;padding:12px 30px;font-size:16px;border-radius:30px}
+#lbCloseBtn{background:#fff;color:#000;padding:12px 30px;font-size:16px;border-radius:30px;margin-top:20px}
 
-/* Галерея */
 #gal{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;flex-direction:column;z-index:9;padding:20px;overflow-y:auto}
 #gal h2{text-align:center;margin:0 0 20px 0;color:var(--ac)}
 #galGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;padding-bottom:40px}
@@ -56,7 +48,6 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 
 #load{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:6;padding:8px 16px;display:none;font-size:14px;font-weight:600;background:rgba(0,0,0,.8);border-radius:20px}
 
-/* Всплывающий текст (для рукопожатия) */
 .popup-text{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);background:rgba(232,194,122,.95);color:#111;padding:12px 24px;border-radius:30px;font-weight:bold;font-size:16px;z-index:7;pointer-events:none;animation:popup 2s forwards}
 @keyframes popup{0%{opacity:0;transform:translate(-50%,-30%)}10%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
 </style></head><body>
@@ -84,8 +75,8 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 <button id="go" style="width:100%;padding:16px;font-size:18px">Войти в музей</button></div></div>
 
 <div id="acts">
-  <button id="sitBtn" style="display:none">🪑 Присесть</button>
-  <button id="danceBtn" class="alt">💃 Танцевать</button>
+  <button id="sitBtn">🪑 Присесть</button>
+  <button id="danceBtn" class="alt" style="display:block">💃 Танцевать</button>
 </div>
 <button id="actionBtn">Действие</button>
 
@@ -93,9 +84,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 
 <div id="lb">
   <img id="lbImg" alt="">
-  <div class="lb-controls">
-    <button id="lbCloseBtn">Закрыть</button>
-  </div>
+  <button id="lbCloseBtn">Закрыть</button>
 </div>
 
 <div id="gal">
@@ -112,7 +101,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, onDisconnect, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhT6akmx3TtAyVAjjGsvahmXdgHxcLyLA",
@@ -127,7 +116,8 @@ const firebaseConfig = {
 window.FB = null;
 try {
   const app = initializeApp(firebaseConfig);
-  window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove };
+  window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove, get };
+  console.log("Firebase OK");
 } catch(e) { console.error("Ошибка Firebase:", e); }
 </script>
 
@@ -238,11 +228,33 @@ slots.forEach(s => {
 const fileInput = document.getElementById('file');
 let pendingSlotId = null;
 
-function shrink(file){return new Promise(res=>{const fr=new FileReader();fr.onerror=()=>res(null);fr.onload=()=>{const i=new Image();i.onload=()=>{try{let out;for(const [m,q] of [[1100,.72],[900,.6],[720,.5],[560,.45]]){const s=Math.min(1,m/Math.max(i.width,i.height)),c=cvs(i.width*s|0,i.height*s|0);c.getContext('2d').drawImage(i,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<200000)break}res({src:out,title:file.name.replace(/\.[^.]+$/,'')})}catch(e){res(null)}};i.onerror=()=>res(null);i.src=fr.result};fr.readAsDataURL(file)})}
+function shrink(file){
+  return new Promise(res=>{
+    const fr=new FileReader();
+    fr.onerror=()=>res(null);
+    fr.onload=()=>{
+      const i=new Image();
+      i.onload=()=>{
+        try{
+          let out;
+          for(const [m,q] of [[1100,.72],[900,.6],[720,.5],[560,.45],[400,.4]]){
+            const s=Math.min(1,m/Math.max(i.width,i.height)),c=cvs(i.width*s|0,i.height*s|0);
+            c.getContext('2d').drawImage(i,0,0,c.width,c.height);
+            out=c.toDataURL('image/jpeg',q);
+            if(out.length<230000) break;
+          }
+          res({src:out,title:file.name.replace(/\.[^.]+$/,'')});
+        }catch(e){res(null)}
+      };
+      i.onerror=()=>res(null); i.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
 
 fileInput.addEventListener('change', async (e) => {
   if(!e.target.files.length || !pendingSlotId) return;
-  const L = document.getElementById('load'); L.style.display='block'; L.textContent='Сохраняю картину…';
+  const L = document.getElementById('load'); L.style.display='block'; L.textContent='Сохраняю…';
   const file = e.target.files[0];
   const r = await shrink(file);
   if (r) {
@@ -322,10 +334,11 @@ function upsertRemote(id, pr) {
   if (!r) {
     const a = makeAvatar(lookOf(pr.k|0)); a.g.add(label(pr.n||'Гость')); a.g.position.set(pr.x,0,pr.z);
     scene.add(a.g);
-    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0 };
+    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0, shakeUntil:0 };
     remotes.set(id, r);
   }
   r.tx = pr.x; r.tz = pr.z; r.tf = pr.f||0; r.s = pr.s||0;
+  if (pr.shake) r.shakeUntil = pr.shake; // Получили сигнал о рукопожатии
 }
 
 let lastSent = 0, lastKey = '';
@@ -351,11 +364,15 @@ async function connect() {
   });
 
   setInterval(() => {
+    if (!started) return;
     const st = sitting ? 2 : dance > 0 ? 1 : 0;
     const key = [pos.x.toFixed(2), pos.z.toFixed(2), face.toFixed(2), st].join();
-    if (key !== lastKey || Date.now() - lastSent > 2000) {
+    // Отправляем обновление, если позиция изменилась ИЛИ если мы жмем руку прямо сейчас
+    if (key !== lastKey || Date.now() - lastSent > 2000 || isShaking > 0) {
       lastKey = key; lastSent = Date.now();
-      set(myRef, { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: st, n: myName, k: myK, t: Date.now() });
+      const payload = { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: st, n: myName, k: myK, t: Date.now() };
+      if (isShaking > 0) payload.shake = Date.now() + 2000; // Флаг рукопожатия
+      set(myRef, payload);
     }
   }, 500);
 }
@@ -409,7 +426,7 @@ scene.add(avatar);
 
 const pos=new THREE.Vector3(0,0,5.2);let yaw=0,pitch=.25,third=true,started=false,vel=new THREE.Vector3(),face=0,walkT=0;
 let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null,nearFrame=null,nearRemote=null;
-let isShaking = 0; // 0 - нет, 1 - жмем руку
+let isShaking = 0; // > 0 - анимация рукопожатия
 const keys={};const isTouch=matchMedia('(pointer:coarse)').matches;
 
 // Управление камерой
@@ -418,13 +435,12 @@ renderer.domElement.addEventListener('mousedown', e => { if(e.button===0 && !lbO
 addEventListener('mouseup', () => isDragging=false);
 addEventListener('mousemove', e => { if(isDragging) { yaw -= e.movementX*.003; pitch += e.movementY*.003; clampP(); } });
 
-// Экранные кнопки
+// Кнопка действия
 const actionBtn = document.getElementById('actionBtn');
 actionBtn.onclick = () => {
-  if (nearRemote) {
-    if (isShaking) return;
-    isShaking = 1.5; // Длительность анимации
-    window.FB.set(window.FB.ref(window.FB.db, 'handshakes/' + myId), { target: nearRemote.id, ts: Date.now() });
+  if (nearRemote && isShaking <= 0) {
+    isShaking = 2; // 2 секунды анимации
+    window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), shake: Date.now()+2000 });
     showPopup('🤝 Вы пожали руку ' + nearRemote.n);
   } else if (nearFrame) {
     if (nearFrame.userData.art) openLb(nearFrame.userData.art);
@@ -477,6 +493,7 @@ document.getElementById('go').onclick=()=>{
   }
   started=true;startEl.style.display='none';
   if(isTouch) document.getElementById('stick').style.display='block';
+  document.getElementById('danceBtn').style.display='block';
 };
 function applyLook() {
   const L = lookOf(myK);
@@ -548,7 +565,8 @@ function frame() {
   
   if (isShaking > 0) {
     isShaking -= dt;
-    armR.rotation.x = -1.4; armR.rotation.z = -0.2; // Рука вперед
+    armR.rotation.x = -1.4; armR.rotation.z = 0; // Рука вперед
+    ry = face; // Смотрим туда же
   }
   else if(sitting){legL.rotation.x=legR.rotation.x=-1.5;armL.rotation.x=armR.rotation.x=-.5;by=-.27}
   else if(dance>0){dance-=dt;danceT+=dt;const s=danceT*9;legL.rotation.x=Math.sin(s)*.6;legR.rotation.x=-Math.sin(s)*.6;armL.rotation.x=-2.4+Math.sin(s)*.5;armR.rotation.x=-2.4-Math.sin(s)*.5;armL.rotation.z=-.4;armR.rotation.z=.4;by=Math.abs(Math.sin(s))*.1;ry=face+Math.sin(danceT*3)*.7+danceT*1.2;avatar.rotation.z=Math.sin(s)*.06}
@@ -570,24 +588,21 @@ function frame() {
   nearFrame=null; nearBench=null; nearRemote=null; 
   let best=3.4; const dir=new THREE.Vector3(-sy,0,-cy);
   
-  // Поиск рам
   frames.forEach(f=>{
     const v=f.pos.clone().sub(pos); v.y=0; const d=v.length();
     if(d<best && v.normalize().dot(dir)>.35 && f.n.dot(pos.clone().sub(f.pos).setY(0))>0){best=d;nearFrame=f.group;}
   });
   
-  // Поиск скамеек
   if(!sitting && dance<=0) benches.forEach(b=>{if(Math.abs(pos.x-b[0])<2.1&&Math.abs(pos.z-b[1])<1.35)nearBench=b});
   
-  // Поиск других игроков для рукопожатия
+  // Поиск ближайшего игрока
   let nearestDist = 2.5;
   remotes.forEach((r, id) => {
     const dx = r.tx - pos.x, dz = r.tz - pos.z;
     const d = Math.hypot(dx, dz);
-    if (d < nearestDist) { nearestDist = d; nearRemote = { id: id, n: r.n }; }
+    if (d < nearestDist) { nearestDist = d; nearRemote = { id: id, n: r.n, r: r }; }
   });
 
-  // Управление кнопкой действия
   if (nearRemote) {
     actionBtn.style.display = 'block'; actionBtn.textContent = '🤝 Пожать руку';
     actionBtn.style.background = '#4caf50'; actionBtn.style.color = '#fff';
@@ -599,11 +614,10 @@ function frame() {
     actionBtn.style.display = 'none';
   }
 
-  // Подсказки на ПК
   if (isTouch) {
-    hint.style.display = 'none'; // На телефоне всё на кнопках
+    hint.style.display = 'none';
   } else {
-    if(nearRemote) { hint.style.display='block'; hintTx.innerHTML = 'Нажмите <b>E</b> или кнопку справа, чтобы пожать руку'; }
+    if(nearRemote) { hint.style.display='block'; hintTx.innerHTML = 'Нажмите <b>E</b>, чтобы пожать руку'; }
     else if(nearFrame && !lbOpen) {
       hint.style.display='block';
       if(nearFrame.userData.art) hintTx.innerHTML = '<b>E</b> — смотреть · <b>R</b> — удалить';
@@ -612,12 +626,6 @@ function frame() {
     else hint.style.display='none';
   }
 
-  // Анимация рукопожатия (если другой игрок пожал нам)
-  if (window.FB && started) {
-    // Слушаем входящие рукопожатия
-    // (В реальном проекте лучше использовать onValue, но для простоты сделаем опрос)
-  }
-  
   remotes.forEach(r=>{
     const g=r.a.g,k=Math.min(1,dt*8);
     const ox=g.position.x,oz=g.position.z;
@@ -627,10 +635,10 @@ function frame() {
     r.t+=dt*r.speed*2.3; const A=r.a; let rby=0;
     A.armL.rotation.z=A.armR.rotation.z=0; g.rotation.z=0;
     
-    // Проверяем, жмем ли мы руку сейчас (если id совпадает с nearRemote)
-    const isThisShaking = nearRemote && nearRemote.id === r.tx; 
-
-    if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
+    if (Date.now() < r.shakeUntil) {
+      // Другой игрок жмет нам руку
+      A.armR.rotation.x = -1.4; A.armR.rotation.z = 0;
+    } else if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
     else if(r.s===1){r.dt+=dt;const s=r.dt*9;A.legL.rotation.x=Math.sin(s)*.6;A.legR.rotation.x=-Math.sin(s)*.6;A.armL.rotation.x=-2.4+Math.sin(s)*.5;A.armR.rotation.x=-2.4-Math.sin(s)*.5;A.armL.rotation.z=-.4;A.armR.rotation.z=.4;rby=Math.abs(Math.sin(s))*.1;g.rotation.z=Math.sin(s)*.06}
     else{r.dt=0;const sw2=Math.sin(r.t)*Math.min(1,r.speed/2.4)*.8;A.legL.rotation.x=sw2;A.legR.rotation.x=-sw2;A.armL.rotation.x=-sw2*.8;A.armR.rotation.x=sw2*.8;rby=Math.abs(Math.sin(r.t))*.025*Math.min(1,r.speed/2)}
     
