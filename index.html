@@ -22,11 +22,13 @@ button:active{transform:scale(.96)}
 
 input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px;width:210px;text-align:center}
 
-#acts{position:fixed;right:12px;bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:4;align-items:flex-end}
-#acts button{margin:0;font-size:14px;padding:12px 16px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.4);display:none}
-
-#actionBtn{position:fixed;right:16px;bottom:calc(110px + env(safe-area-inset-bottom,0px));z-index:5;padding:16px 24px;font-size:16px;border-radius:20px;background:var(--ac);color:#111;font-weight:bold;box-shadow:0 6px 20px rgba(232,194,122,.4);display:none;border:2px solid #fff}
-#actionBtn:active{transform:scale(.95)}
+/* Экранные кнопки действий */
+#actionsArea{position:fixed;right:16px;bottom:calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;z-index:5;align-items:flex-end;pointer-events:none}
+#actionsArea button{pointer-events:auto;margin:0;font-size:15px;padding:14px 20px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,.4);font-weight:bold;display:none;border:2px solid rgba(255,255,255,.2)}
+#actView{background:var(--ac);color:#111}
+#actDelete{background:#d9534f;color:#fff;display:none}
+#actHand{background:#4caf50;color:#fff}
+#actChat{background:#2f5d8a;color:#fff}
 
 #stick{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;display:none;z-index:4;touch-action:none;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
 #knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -34,10 +36,12 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 #hint{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:12px 20px;display:none;z-index:3;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.7);border-radius:20px}
 #hint b{color:var(--ac)}
 
+/* Просмотр картины */
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:8;padding:16px}
 #lb img{max-width:94vw;max-height:80vh;border:10px solid #f3efe6;box-shadow:0 20px 60px #000;border-radius:4px}
 #lbCloseBtn{background:#fff;color:#000;padding:12px 30px;font-size:16px;border-radius:30px;margin-top:20px}
 
+/* Галерея */
 #gal{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;flex-direction:column;z-index:9;padding:20px;overflow-y:auto}
 #gal h2{text-align:center;margin:0 0 20px 0;color:var(--ac)}
 #galGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;padding-bottom:40px}
@@ -46,8 +50,15 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 .gal-del{position:absolute;top:5px;right:5px;background:rgba(217,83,79,.9);color:white;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:bold}
 #galClose{position:fixed;top:20px;right:20px;z-index:10;border-radius:50%;width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px}
 
+/* Модалка ввода сообщения */
+#chatModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:11;padding:20px}
+#chatModal .glass{padding:20px;width:100%;max-width:400px;text-align:center}
+#chatInput{width:100%;margin-bottom:16px;padding:12px;font-size:16px}
+#chatModal button{padding:10px 20px;margin:0 4px}
+
 #load{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:6;padding:8px 16px;display:none;font-size:14px;font-weight:600;background:rgba(0,0,0,.8);border-radius:20px}
 
+/* Всплывающий текст */
 .popup-text{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);background:rgba(232,194,122,.95);color:#111;padding:12px 24px;border-radius:30px;font-weight:bold;font-size:16px;z-index:7;pointer-events:none;animation:popup 2s forwards}
 @keyframes popup{0%{opacity:0;transform:translate(-50%,-30%)}10%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
 </style></head><body>
@@ -59,13 +70,11 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
   </div>
   <div class="glass">
     <button class="alt" id="galBtn" style="padding:6px 12px;margin:0;font-size:13px">🖼 Галерея</button>
-    <button class="alt" id="clearBtn" style="padding:6px 12px;margin:0;font-size:13px">🗑 Всё</button>
   </div>
 </div>
 
 <div id="start"><div class="glass"><h1>Домашний музей</h1>
 <p>Ваши фото в виде картин в просторной галерее. Гуляйте по залу, подходите к рамам и рассматривайте снимки.</p>
-<p style="font-size:13px;opacity:.7">WASD — ходьба · ЛКМ (зажать) — камера · Клик — действие<br>На телефоне: джойстик слева, свайп справа</p>
 <div id="gate">
   <p>🔒 Вход для своих</p>
   <input id="nm" placeholder="Ваше имя" maxlength="16" autocomplete="off"><br>
@@ -74,11 +83,13 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 </div>
 <button id="go" style="width:100%;padding:16px;font-size:18px">Войти в музей</button></div></div>
 
-<div id="acts">
-  <button id="sitBtn">🪑 Присесть</button>
-  <button id="danceBtn" class="alt" style="display:block">💃 Танцевать</button>
+<div id="actionsArea">
+  <button id="actHand">🤝 Пожать руку</button>
+  <button id="actDelete">🗑 Удалить картину</button>
+  <button id="actView">👁 Посмотреть</button>
+  <button id="actAdd">📷 Повесить фото</button>
+  <button id="actChat" style="display:block">💬 Написать</button>
 </div>
-<button id="actionBtn">Действие</button>
 
 <div id="hint" class="glass"><span id="hintTx"></span></div>
 
@@ -93,6 +104,17 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
   <div id="galGrid"></div>
 </div>
 
+<div id="chatModal">
+  <div class="glass">
+    <h2>Сообщение</h2>
+    <input id="chatInput" placeholder="Введите текст..." maxlength="40" autocomplete="off">
+    <div>
+      <button id="chatSend" class="btn">Отправить</button>
+      <button id="chatCancel" class="alt">Отмена</button>
+    </div>
+  </div>
+</div>
+
 <div id="stick" class="glass"><div id="knob"></div></div>
 <div id="load" class="glass">Загружаю…</div>
 
@@ -101,7 +123,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, onDisconnect, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAhT6akmx3TtAyVAjjGsvahmXdgHxcLyLA",
@@ -116,7 +138,7 @@ const firebaseConfig = {
 window.FB = null;
 try {
   const app = initializeApp(firebaseConfig);
-  window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove, get };
+  window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove };
   console.log("Firebase OK");
 } catch(e) { console.error("Ошибка Firebase:", e); }
 </script>
@@ -329,16 +351,43 @@ function makeAvatar(l) {
   return { g, armL: limb(-.27,1.42,.55,.055,sh), armR: limb(.27,1.42,.55,.055,sh), legL: limb(-.1,.85,.85,.075,pa,1), legR: limb(.1,.85,.85,.075,pa,1) };
 }
 
+function makeMessageSprite(text) {
+  const c = cvs(512, 128), x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,0.95)';
+  x.beginPath(); x.roundRect(10,10,492,108,20); x.fill();
+  x.beginPath(); x.moveTo(256,118); x.lineTo(240,90); x.lineTo(272,90); x.fill(); // Хвостик
+  x.fillStyle = '#111'; x.font = 'bold 40px system-ui,sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text.slice(0, 30), 256, 60);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true, depthTest: false }));
+  s.scale.set(2.5, 0.625, 1); s.position.y = 2.6; s.renderOrder = 11;
+  return s;
+}
+
 function upsertRemote(id, pr) {
   let r = remotes.get(id);
   if (!r) {
     const a = makeAvatar(lookOf(pr.k|0)); a.g.add(label(pr.n||'Гость')); a.g.position.set(pr.x,0,pr.z);
     scene.add(a.g);
-    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0, shakeUntil:0 };
+    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0, shakeUntil:0, msgSprite:null };
     remotes.set(id, r);
   }
   r.tx = pr.x; r.tz = pr.z; r.tf = pr.f||0; r.s = pr.s||0;
-  if (pr.shake) r.shakeUntil = pr.shake; // Получили сигнал о рукопожатии
+  if (pr.shake) r.shakeUntil = pr.shake;
+  
+  // Обработка сообщений
+  if (pr.msg && pr.msgT > Date.now() - 7000) {
+    if (!r.msgSprite || r.msgSprite.userData.text !== pr.msg) {
+      if (r.msgSprite) r.a.g.remove(r.msgSprite);
+      r.msgSprite = makeMessageSprite(pr.msg);
+      r.msgSprite.userData.text = pr.msg;
+      r.a.g.add(r.msgSprite);
+    }
+  } else if (r.msgSprite) {
+    r.a.g.remove(r.msgSprite);
+    r.msgSprite = null;
+  }
 }
 
 let lastSent = 0, lastKey = '';
@@ -367,11 +416,11 @@ async function connect() {
     if (!started) return;
     const st = sitting ? 2 : dance > 0 ? 1 : 0;
     const key = [pos.x.toFixed(2), pos.z.toFixed(2), face.toFixed(2), st].join();
-    // Отправляем обновление, если позиция изменилась ИЛИ если мы жмем руку прямо сейчас
     if (key !== lastKey || Date.now() - lastSent > 2000 || isShaking > 0) {
       lastKey = key; lastSent = Date.now();
       const payload = { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: st, n: myName, k: myK, t: Date.now() };
-      if (isShaking > 0) payload.shake = Date.now() + 2000; // Флаг рукопожатия
+      if (isShaking > 0) payload.shake = Date.now() + 2000;
+      if (myMsgText && myMsgTime > Date.now() - 7000) { payload.msg = myMsgText; payload.msgT = myMsgTime; }
       set(myRef, payload);
     }
   }, 500);
@@ -401,15 +450,6 @@ galGrid.addEventListener('click', async e => {
 
 document.getElementById('galBtn').onclick = () => { updateGalleryUI(); gal.style.display = 'flex'; };
 document.getElementById('galClose').onclick = () => gal.style.display = 'none';
-document.getElementById('clearBtn').onclick = async e => {
-  const b = e.target;
-  if (!b.dataset.arm) { b.dataset.arm = 1; b.textContent = 'Точно?'; setTimeout(() => { b.dataset.arm = 0; b.textContent = '🗑 Всё'; }, 3000); return; }
-  b.dataset.arm = 0; b.textContent = '🗑 Всё';
-  if(window.FB) {
-     const ids = Object.keys(window.currentPaintings);
-     for(const id of ids) await window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + id));
-  }
-};
 document.getElementById('menuBtn').onclick = () => { if(confirm('Выйти в меню?')) location.reload(); };
 
 /* Персонаж */
@@ -426,40 +466,65 @@ scene.add(avatar);
 
 const pos=new THREE.Vector3(0,0,5.2);let yaw=0,pitch=.25,third=true,started=false,vel=new THREE.Vector3(),face=0,walkT=0;
 let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null,nearFrame=null,nearRemote=null;
-let isShaking = 0; // > 0 - анимация рукопожатия
+let isShaking = 0; 
+let myMsgText = '', myMsgTime = 0, myMsgSprite = null;
 const keys={};const isTouch=matchMedia('(pointer:coarse)').matches;
 
 // Управление камерой
 let isDragging = false;
-renderer.domElement.addEventListener('mousedown', e => { if(e.button===0 && !lbOpen && gal.style.display!=='flex') isDragging=true; });
+renderer.domElement.addEventListener('mousedown', e => { if(e.button===0 && !lbOpen && gal.style.display!=='flex' && document.getElementById('chatModal').style.display!=='flex') isDragging=true; });
 addEventListener('mouseup', () => isDragging=false);
 addEventListener('mousemove', e => { if(isDragging) { yaw -= e.movementX*.003; pitch += e.movementY*.003; clampP(); } });
 
-// Кнопка действия
-const actionBtn = document.getElementById('actionBtn');
-actionBtn.onclick = () => {
-  if (nearRemote && isShaking <= 0) {
-    isShaking = 2; // 2 секунды анимации
-    window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), shake: Date.now()+2000 });
-    showPopup('🤝 Вы пожали руку ' + nearRemote.n);
-  } else if (nearFrame) {
-    if (nearFrame.userData.art) openLb(nearFrame.userData.art);
-    else { pendingSlotId = nearFrame.userData.slotId; fileInput.click(); }
+// Кнопки действий
+const btnView = document.getElementById('actView');
+const btnAdd = document.getElementById('actAdd');
+const btnDelete = document.getElementById('actDelete');
+const btnHand = document.getElementById('actHand');
+const btnChat = document.getElementById('actChat');
+
+btnView.onclick = () => { if(nearFrame && nearFrame.userData.art) openLb(nearFrame.userData.art); };
+btnAdd.onclick = () => { if(nearFrame) { pendingSlotId = nearFrame.userData.slotId; fileInput.click(); } };
+btnDelete.onclick = () => { 
+  if(nearFrame && nearFrame.userData.art) {
+    if(confirm('Удалить эту картину?')) window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + nearFrame.userData.slotId));
   }
 };
+btnHand.onclick = () => {
+  if (nearRemote && isShaking <= 0) {
+    isShaking = 2; 
+    window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), shake: Date.now()+2000 });
+    showPopup('🤝 Вы пожали руку ' + nearRemote.n);
+  }
+};
+btnChat.onclick = () => {
+  document.getElementById('chatModal').style.display = 'flex';
+  document.getElementById('chatInput').focus();
+};
+
+// Чат
+document.getElementById('chatSend').onclick = () => {
+  const val = document.getElementById('chatInput').value.trim();
+  if (val) {
+    myMsgText = val; myMsgTime = Date.now();
+    if (myMsgSprite) avatar.remove(myMsgSprite);
+    myMsgSprite = makeMessageSprite(myMsgText);
+    avatar.add(myMsgSprite);
+    // Сразу отправляем в базу
+    window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), msg: myMsgText, msgT: myMsgTime });
+  }
+  document.getElementById('chatModal').style.display = 'none';
+};
+document.getElementById('chatCancel').onclick = () => { document.getElementById('chatModal').style.display = 'none'; };
 
 addEventListener('keydown', e => {
   if(e.target.tagName==='INPUT') return;
   keys[e.code]=true;
-  if (e.code==='KeyE') actionBtn.click();
-  if (e.code==='KeyR') {
-    if(nearFrame && nearFrame.userData.art) {
-      if(confirm('Удалить картину?')) window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + nearFrame.userData.slotId));
-    }
-  }
-  if(e.code==='KeyF') toggleSit();
-  if(e.code==='KeyG') startDance();
-  if(e.code==='Escape') { closeLb(); gal.style.display='none'; }
+  if (e.code==='KeyT') btnChat.click();
+  if (e.code==='KeyF') toggleSit();
+  if (e.code==='KeyG') startDance();
+  if (e.code==='KeyR' && nearFrame && nearFrame.userData.art) btnDelete.click();
+  if(e.code==='Escape') { closeLb(); gal.style.display='none'; document.getElementById('chatModal').style.display='none'; }
 });
 addEventListener('keyup', e=>keys[e.code]=false);
 
@@ -473,9 +538,6 @@ function clampP(){pitch=Math.max(third?.05:-1.3,Math.min(third?1.1:1.3,pitch))}
 function startDance(){if(sitting||!started||lbOpen)return;dance=5;danceT=0;third=true;if(pitch<.1)pitch=.2}
 function standUp(){if(!sitting)return;pos.z=sitting[1]+sitSide*.95;sitting=null}
 function toggleSit(){if(!started||lbOpen)return;if(sitting){standUp();return}if(!nearBench||dance>0)return;const b=nearBench;sitting=b;pos.x=Math.max(b[0]-.85,Math.min(b[0]+.85,pos.x));sitSide=pos.z>=b[1]?1:-1;pos.z=b[1];face=sitSide>0?0:Math.PI;vel.set(0,0,0)}
-
-document.getElementById('sitBtn').onclick = toggleSit;
-document.getElementById('danceBtn').onclick = startDance;
 
 /* Вход */
 const startEl=document.getElementById('start');
@@ -493,7 +555,6 @@ document.getElementById('go').onclick=()=>{
   }
   started=true;startEl.style.display='none';
   if(isTouch) document.getElementById('stick').style.display='block';
-  document.getElementById('danceBtn').style.display='block';
 };
 function applyLook() {
   const L = lookOf(myK);
@@ -505,9 +566,9 @@ function applyLook() {
 /* Тач управление */
 let joy=null,look=null,jv={x:0,y:0};const stick=document.getElementById('stick'),knob=document.getElementById('knob');
 addEventListener('touchstart',e=>{
-  if(!started||gal.style.display==='flex')return;
+  if(!started||gal.style.display==='flex'||document.getElementById('chatModal').style.display==='flex')return;
   for(const t of e.changedTouches){
-    if(t.target.closest('#hud,#hint,#lb,#acts,#gal,#actionBtn'))continue;
+    if(t.target.closest('#hud,#hint,#lb,#actionsArea,#gal'))continue;
     if(t.clientX<innerWidth*.4&&joy===null)joy=t.identifier;
     else if(look===null)look={id:t.identifier,x:t.clientX,y:t.clientY};
   }
@@ -542,7 +603,7 @@ function blocked(x,z){if(Math.abs(x)>W/2-.6||Math.abs(z)>D/2-.6)return true;retu
 function frame() {
   requestAnimationFrame(frame); const dt=Math.min(clock.getDelta(),.05);
   let fx=0,fz=0;
-  if(started&&!lbOpen&&gal.style.display!=='flex'&&isShaking<=0){
+  if(started&&!lbOpen&&gal.style.display!=='flex'&&isShaking<=0&&document.getElementById('chatModal').style.display!=='flex'){
     if(keys.KeyW||keys.ArrowUp)fz-=1; if(keys.KeyS||keys.ArrowDown)fz+=1;
     if(keys.KeyA||keys.ArrowLeft)fx-=1; if(keys.KeyD||keys.ArrowRight)fx+=1;
     fx+=jv.x; fz+=jv.y;
@@ -565,8 +626,7 @@ function frame() {
   
   if (isShaking > 0) {
     isShaking -= dt;
-    armR.rotation.x = -1.4; armR.rotation.z = 0; // Рука вперед
-    ry = face; // Смотрим туда же
+    armL.rotation.x = -1.4; armL.rotation.z = 0; // ЛЕВАЯ рука вперед
   }
   else if(sitting){legL.rotation.x=legR.rotation.x=-1.5;armL.rotation.x=armR.rotation.x=-.5;by=-.27}
   else if(dance>0){dance-=dt;danceT+=dt;const s=danceT*9;legL.rotation.x=Math.sin(s)*.6;legR.rotation.x=-Math.sin(s)*.6;armL.rotation.x=-2.4+Math.sin(s)*.5;armR.rotation.x=-2.4-Math.sin(s)*.5;armL.rotation.z=-.4;armR.rotation.z=.4;by=Math.abs(Math.sin(s))*.1;ry=face+Math.sin(danceT*3)*.7+danceT*1.2;avatar.rotation.z=Math.sin(s)*.06}
@@ -595,7 +655,6 @@ function frame() {
   
   if(!sitting && dance<=0) benches.forEach(b=>{if(Math.abs(pos.x-b[0])<2.1&&Math.abs(pos.z-b[1])<1.35)nearBench=b});
   
-  // Поиск ближайшего игрока
   let nearestDist = 2.5;
   remotes.forEach((r, id) => {
     const dx = r.tx - pos.x, dz = r.tz - pos.z;
@@ -603,16 +662,14 @@ function frame() {
     if (d < nearestDist) { nearestDist = d; nearRemote = { id: id, n: r.n, r: r }; }
   });
 
-  if (nearRemote) {
-    actionBtn.style.display = 'block'; actionBtn.textContent = '🤝 Пожать руку';
-    actionBtn.style.background = '#4caf50'; actionBtn.style.color = '#fff';
-  } else if (nearFrame) {
-    actionBtn.style.display = 'block';
-    if (nearFrame.userData.art) { actionBtn.textContent = '👁 Посмотреть'; actionBtn.style.background = 'var(--ac)'; actionBtn.style.color = '#111'; }
-    else { actionBtn.textContent = '📷 Повесить фото'; actionBtn.style.background = 'var(--ac)'; actionBtn.style.color = '#111'; }
-  } else {
-    actionBtn.style.display = 'none';
-  }
+  // Обновление видимости кнопок
+  btnHand.style.display = nearRemote ? 'block' : 'none';
+  btnView.style.display = (nearFrame && nearFrame.userData.art) ? 'block' : 'none';
+  btnDelete.style.display = (nearFrame && nearFrame.userData.art) ? 'block' : 'none';
+  btnAdd.style.display = (nearFrame && !nearFrame.userData.art) ? 'block' : 'none';
+  
+  // Кнопка "Написать" видна всегда, но сдвигается, если есть другие кнопки
+  // (Решается средствами CSS, так как кнопки в контейнере flex)
 
   if (isTouch) {
     hint.style.display = 'none';
@@ -626,6 +683,13 @@ function frame() {
     else hint.style.display='none';
   }
 
+  // Обновление сообщения над своим персонажем
+  if (myMsgSprite && myMsgTime < Date.now() - 7000) {
+    avatar.remove(myMsgSprite);
+    myMsgSprite = null;
+    myMsgText = '';
+  }
+
   remotes.forEach(r=>{
     const g=r.a.g,k=Math.min(1,dt*8);
     const ox=g.position.x,oz=g.position.z;
@@ -636,8 +700,7 @@ function frame() {
     A.armL.rotation.z=A.armR.rotation.z=0; g.rotation.z=0;
     
     if (Date.now() < r.shakeUntil) {
-      // Другой игрок жмет нам руку
-      A.armR.rotation.x = -1.4; A.armR.rotation.z = 0;
+      A.armL.rotation.x = -1.4; A.armL.rotation.z = 0;
     } else if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
     else if(r.s===1){r.dt+=dt;const s=r.dt*9;A.legL.rotation.x=Math.sin(s)*.6;A.legR.rotation.x=-Math.sin(s)*.6;A.armL.rotation.x=-2.4+Math.sin(s)*.5;A.armR.rotation.x=-2.4-Math.sin(s)*.5;A.armL.rotation.z=-.4;A.armR.rotation.z=.4;rby=Math.abs(Math.sin(s))*.1;g.rotation.z=Math.sin(s)*.06}
     else{r.dt=0;const sw2=Math.sin(r.t)*Math.min(1,r.speed/2.4)*.8;A.legL.rotation.x=sw2;A.legR.rotation.x=-sw2;A.armL.rotation.x=-sw2*.8;A.armR.rotation.x=sw2*.8;rby=Math.abs(Math.sin(r.t))*.025*Math.min(1,r.speed/2)}
@@ -646,8 +709,8 @@ function frame() {
   });
 
   const showSit=started&&(sitting||nearBench)?'block':'none';
-  if(document.getElementById('sitBtn').style.display!==showSit) document.getElementById('sitBtn').style.display=showSit;
-  document.getElementById('sitBtn').textContent=sitting?'🧍 Встать':'🪑 Присесть';
+  const sitBtn = document.getElementById('sitBtn');
+  if(sitBtn) sitBtn.style.display=showSit;
 
   renderer.render(scene,camera);
 }
