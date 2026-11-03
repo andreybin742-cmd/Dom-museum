@@ -39,9 +39,36 @@ input{font:inherit;color:var(--tx);background:rgba(255,255,255,.1);border:1px so
 <div id="lb"><img id="lbImg" alt=""><div id="lbTx"></div></div>
 <div id="stick" class="glass"><div id="knob"></div></div>
 <div id="load" class="glass">Загружаю фото…</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+// Ваши ключи Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyAhT6akmx3TtAyVAjjGsvahmXdgHxcLyLA",
+  authDomain: "home-museum-31e45.firebaseapp.com",
+  databaseURL: "https://home-museum-31e45-default-rtdb.firebaseio.com",
+  projectId: "home-museum-31e45",
+  storageBucket: "home-museum-31e45.firebasestorage.app",
+  messagingSenderId: "448633159592",
+  appId: "1:448633159592:web:da3930f12e448ef048279d"
+};
+
+window.FB = null;
+try {
+  const app = initializeApp(firebaseConfig);
+  window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove };
+  console.log("Firebase успешно инициализирован");
+} catch(e) {
+  console.error("Ошибка Firebase:", e);
+}
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" crossorigin="anonymous"></script>
 <script>addEventListener('error',e=>{const el=document.getElementById('err');if(el&&e&&e.message&&e.message!=='Script error.')el.textContent='Ошибка: '+e.message});if(!window.THREE)document.addEventListener('DOMContentLoaded',()=>{const el=document.getElementById('err');if(el)el.textContent='Не загрузилась библиотека three.js. Проверьте интернет.'})</script>
+
 <script>
 const W=26,D=14,H=4.6;
 const renderer=new THREE.WebGLRenderer({antialias:true});
@@ -54,6 +81,7 @@ const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.05,80);
 const aniso=renderer.capabilities.getMaxAnisotropy();
 function cvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c}
 function tex(c,rx,ry){const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx||1,ry||1);t.anisotropy=aniso;t.encoding=THREE.sRGBEncoding;return t}
+
 /* Паркет */
 const fc=cvs(1024,1024),fx=fc.getContext('2d');
 for(let r=0;r<8;r++)for(let i=-1;i<5;i++){const off=(r%2)*128,x=i*256+off,y=r*128,l=40+Math.random()*14;
@@ -61,6 +89,7 @@ fx.fillStyle=`hsl(${24+Math.random()*6},${48+Math.random()*10}%,${l}%)`;fx.fillR
 for(let k=0;k<22;k++){fx.strokeStyle=`rgba(50,25,10,${Math.random()*.12})`;fx.beginPath();const yy=y+Math.random()*126;fx.moveTo(x,yy);fx.lineTo(x+254,yy+Math.random()*4-2);fx.stroke()}}
 const floorMat=new THREE.MeshStandardMaterial({map:tex(fc,W/4,D/4),roughness:.32,metalness:.05});
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(W,D),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
+
 /* Стены */
 const wc=cvs(512,512),wx=wc.getContext('2d');wx.fillStyle='#e8e2d6';wx.fillRect(0,0,512,512);
 for(let i=0;i<9000;i++){wx.fillStyle=`rgba(${Math.random()<.5?'255,255,255':'120,100,80'},${Math.random()*.05})`;wx.fillRect(Math.random()*512,Math.random()*512,2,2)}
@@ -68,19 +97,23 @@ const wallMat=new THREE.MeshStandardMaterial({map:tex(wc,6,2),roughness:.92});
 function wall(w,h,x,y,z,ry){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),wallMat);m.position.set(x,y,z);m.rotation.y=ry;m.receiveShadow=true;scene.add(m)}
 wall(W,H,0,H/2,-D/2,0);wall(W,H,0,H/2,D/2,Math.PI);wall(D,H,-W/2,H/2,0,Math.PI/2);wall(D,H,W/2,H/2,0,-Math.PI/2);
 const ceil=new THREE.Mesh(new THREE.PlaneGeometry(W,D),new THREE.MeshStandardMaterial({color:0xf2efe8,roughness:.95}));ceil.rotation.x=Math.PI/2;ceil.position.y=H;scene.add(ceil);
+
 /* Плинтус и карниз */
 const trimMat=new THREE.MeshStandardMaterial({color:0xf5f2ea,roughness:.6});
 [[W,0,-D/2,0],[W,0,D/2,0],[D,-W/2,0,1],[D,W/2,0,1]].forEach(([l,x,z,r])=>{
  [[.12,.08],[H-.08,.12]].forEach(([y,h])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(r?.06:l,h,r?l:.06),trimMat);m.position.set(x+(r?(x<0?.03:-.03):0),y,z+(r?0:(z<0?.03:-.03)));scene.add(m)})});
+
 /* Потолочные светильники */
 const lampMat=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0d8,emissiveIntensity:1.4});
 for(let i=0;i<4;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(2.4,.04,.3),lampMat);m.position.set(-9.75+i*6.5,H-.02,0);scene.add(m)}
+
 /* Свет */
 scene.add(new THREE.HemisphereLight(0xfff4e6,0x5a4630,.55));
 const sun=new THREE.DirectionalLight(0xfff0dd,.55);sun.position.set(6,4.4,4);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-15,right:15,top:8,bottom:-8,near:1,far:20});sun.shadow.bias=-.0005;sun.shadow.camera.updateProjectionMatrix();scene.add(sun);scene.add(sun.target);
 [[-8.67,-1],[0,-1],[8.67,-1],[-8.67,1],[0,1],[8.67,1]].forEach(([x,s])=>{const l=new THREE.SpotLight(0xffe8c8,1.5,14,1,.8,1.2);l.position.set(x,H-.2,s*(D/2-2));l.target.position.set(x,1.7,s*D/2);scene.add(l,l.target)});
 [-1,1].forEach(s=>{const l=new THREE.SpotLight(0xffe8c8,1.4,14,1,.8,1.2);l.position.set(s*(W/2-2),H-.2,0);l.target.position.set(s*W/2,1.7,0);scene.add(l,l.target)});
+
 /* Скамьи */
 const woodMat=new THREE.MeshStandardMaterial({color:0x4a2f1c,roughness:.5}),cushMat=new THREE.MeshStandardMaterial({color:0x2c3a4a,roughness:.85});
 const benches=[[-5,0],[5,0]];
@@ -88,9 +121,11 @@ benches.forEach(([x,z])=>{const g=new THREE.Group();
  const s=new THREE.Mesh(new THREE.BoxGeometry(2.4,.12,.7),cushMat);s.position.y=.5;g.add(s);
  [[-1.05,-.28],[1.05,-.28],[-1.05,.28],[1.05,.28]].forEach(([a,b])=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.08,.46,.08),woodMat);l.position.set(a,.23,b);g.add(l)});
  g.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true}});g.position.set(x,0,z);scene.add(g)});
+
 /* Ковёр */
 const rc=cvs(256,256),rx=rc.getContext('2d');rx.fillStyle='#6b2b2b';rx.fillRect(0,0,256,256);rx.strokeStyle='#d9b26a';rx.lineWidth=6;rx.strokeRect(12,12,232,232);rx.lineWidth=2;rx.strokeRect(26,26,204,204);
 const rug=new THREE.Mesh(new THREE.PlaneGeometry(14,3.4),new THREE.MeshStandardMaterial({map:tex(rc),roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.y=.005;rug.receiveShadow=true;scene.add(rug);
+
 /* Слоты для картин */
 const slots=[];const N=6;
 for(let i=0;i<N;i++){const x=-W/2+(i+.5)*W/N;slots.push({p:[x,-D/2],n:[0,1],r:0});slots.push({p:[x,D/2],n:[0,-1],r:Math.PI})}
@@ -111,12 +146,14 @@ function addFrame(img,title,slot){
  frames.push({pos:new THREE.Vector3(g.position.x,cy,g.position.z),n:new THREE.Vector3(slot.n[0],0,slot.n[1]),title,src:img.src})}
 function clearFrames(){while(framesGroup.children.length)framesGroup.remove(framesGroup.children[0]);frames=[]}
 function buildGallery(items){clearFrames();items.slice(0,slots.length).forEach((it,i)=>addFrame(it.img,it.title,slots[i]))}
+
 /* Демо-картины */
 function demoArt(i){const c=cvs(900,600),x=c.getContext('2d'),h=[30,200,340,120,270,10][i];
  let g=x.createLinearGradient(0,0,0,600);g.addColorStop(0,`hsl(${h},70%,70%)`);g.addColorStop(1,`hsl(${h+30},60%,88%)`);x.fillStyle=g;x.fillRect(0,0,900,600);
  x.fillStyle=`hsla(${h+40},90%,85%,.9)`;x.beginPath();x.arc(650,170,60,0,7);x.fill();
  [[.55,.35],[.7,.25],[.85,.15]].forEach(([y,l],k)=>{x.fillStyle=`hsl(${h+60+k*20},35%,${l*100}%)`;x.beginPath();x.moveTo(0,600);for(let X=0;X<=900;X+=30)x.lineTo(X,600*y+Math.sin(X/110+k*2+i)*45);x.lineTo(900,600);x.fill()});
  const im=new Image();im.src=c.toDataURL('image/jpeg',.9);return new Promise(r=>{im.onload=()=>r({img:im,title:'Пример '+(i+1)})})}
+
 /* Хранилище IndexedDB */
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('home-museum',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej()})}
 async function dbSet(v){try{const d=await idb();d.transaction('s','readwrite').objectStore('s').put(v,'photos')}catch(e){}}
@@ -128,7 +165,6 @@ let records=[];
 async function onFiles(files){if(!files.length)return;const L=document.getElementById('load');L.style.display='block';
  const add=[];for(const f of files){const r=await shrink(f);if(r)add.push(r)}
  if(!add.length){L.textContent='Не удалось прочитать фото';setTimeout(()=>{L.style.display='none';L.textContent='Загружаю фото…'},2500);return}
- if(db&&await saveShared(add)){L.style.display='none';return}
  records=records.concat(add).slice(-slots.length);dbSet(records);recItems=await fromRecords(records);compose();shareLive(add);L.style.display='none'}
 ['file','file2'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{onFiles([...e.target.files]);e.target.value=''}));
 function tryImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
@@ -139,6 +175,7 @@ async function listRepoPhotos(){const ext=/\.(jpe?g|png|webp|gif|avif)$/i;let na
 let repoItems=[],recItems=[],liveItems=[],demoItems=[];
 function compose(){const all=[...repoItems,...recItems,...liveItems.filter(x=>x.from!==myId)];buildGallery(all.length?all:demoItems)}
 (async()=>{demoItems=await Promise.all([0,1,2,3,4,5].map(demoArt));compose();repoItems=await listRepoPhotos();compose();const saved=await Promise.race([dbGet(),new Promise(r=>setTimeout(()=>r(null),2000))]);if(saved&&saved.length&&!records.length)records=saved;recItems=await fromRecords(records);compose()})();
+
 /* Персонаж */
 const avatar=new THREE.Group();
 const skin=new THREE.MeshStandardMaterial({color:0xe0b08c,roughness:.7}),shirt=new THREE.MeshStandardMaterial({color:0x2f5d8a,roughness:.8}),pants=new THREE.MeshStandardMaterial({color:0x2b2b34,roughness:.85}),hairM=new THREE.MeshStandardMaterial({color:0x2a1c12,roughness:.6}),shoe=new THREE.MeshStandardMaterial({color:0x151515,roughness:.5});
@@ -152,6 +189,7 @@ part(new THREE.CylinderGeometry(.05,.055,.1,10),skin,0,1.55,0);
 function limb(x,y,len,r,mat,foot){const p=new THREE.Group();p.position.set(x,y,0);avatar.add(p);part(new THREE.CylinderGeometry(r,r*.9,len,10),mat,0,-len/2,0,p);if(foot)part(new THREE.BoxGeometry(.13,.07,.24),shoe,0,-len-.02,.05,p);else part(new THREE.SphereGeometry(r*.95,10,8),skin,0,-len,0,p);return p}
 const armL=limb(-.27,1.42,.55,.055,shirt),armR=limb(.27,1.42,.55,.055,shirt),legL=limb(-.1,.85,.85,.075,pants,1),legR=limb(.1,.85,.85,.075,pants,1);
 scene.add(avatar);
+
 /* Управление */
 const pos=new THREE.Vector3(0,0,5.2);let yaw=0,pitch=.25,third=true,started=false,vel=new THREE.Vector3(),face=0,walkT=0,zoomed=false;let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null;
 const keys={};const isTouch=matchMedia('(pointer:coarse)').matches;
@@ -177,6 +215,7 @@ addEventListener('touchstart',e=>{if(!started)return;for(const t of e.changedTou
 addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===joy){const r=stick.getBoundingClientRect(),dx=t.clientX-(r.left+55),dy=t.clientY-(r.top+55),l=Math.hypot(dx,dy),k=Math.min(1,l/55);jv.x=dx/(l||1)*k;jv.y=dy/(l||1)*k;knob.style.transform=`translate(${jv.x*35}px,${jv.y*35}px)`}
  else if(look&&t.identifier===look.id){yaw-=(t.clientX-look.x)*.005;pitch+=(t.clientY-look.y)*.005;clampP();look.x=t.clientX;look.y=t.clientY}}},{passive:true});
 addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===joy){joy=null;jv={x:0,y:0};knob.style.transform=''}if(look&&t.identifier===look.id)look=null}});
+
 /* Просмотр картины */
 const lb=document.getElementById('lb');let lbOpen=false,near=null;
 function interact(){if(lbOpen){closeLb();return}if(!near)return;lbOpen=true;document.exitPointerLock&&document.exitPointerLock();document.getElementById('lbImg').src=near.src;document.getElementById('lbTx').textContent=near.title;lb.style.display='flex';startEl.style.display='none'}
@@ -186,43 +225,12 @@ lb.onclick=closeLb;document.getElementById('hint').onclick=interact;
 function blocked(x,z){if(Math.abs(x)>W/2-.6||Math.abs(z)>D/2-.6)return true;return benches.some(([bx,bz])=>Math.abs(x-bx)<1.2+.3&&Math.abs(z-bz)<.35+.3)}
 
 /* ============================================================
-   СЕТЬ: PeerJS с полносвязной топологией + ПУБЛИЧНЫЙ TURN
+   СЕТЬ: Firebase Realtime Database
    ============================================================ */
 const myId = Math.random().toString(36).slice(2, 10);
-
-const ICE_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    {
-      urls: 'turn:openrelay.metered.ca:80',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turns:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    }
-  ]
-};
-
-const ROOM_HASH = 'homemuseum-' + btoa(location.host + location.pathname)
-  .replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 32);
-
 let authed = false, myName = '', myK = 0, labelObj = null;
-let db = null, dbPhotos = [], dbIds = [];
 let lastSent = 0, lastKey = '';
-const remotes = new Map();
-const peers = new Map();
-let myPeer = null;
-let reconnectTimer = null;
-let connected = false;
+const remotes = new Map(); 
 
 const SH = [0xc0392b,0x2f5d8a,0x2e8b57,0xd4a017,0x8e44ad,0xe67e22,0x16a085,0xd35d8c],
       PA = [0x2b2b34,0x3d4a63,0x5a4630,0x333f33,0x4a2f4a,0x6b6b6b],
@@ -310,39 +318,6 @@ function removeRemote(peerId) {
   if (r) { scene.remove(r.a.g); remotes.delete(peerId); updWho(); }
 }
 
-function broadcast(msg, exceptId) {
-  peers.forEach((p, id) => {
-    if (id === exceptId) return;
-    if (p.conn && p.conn.open) {
-      try { p.conn.send(msg); } catch(e) {}
-    }
-  });
-}
-
-function sendState() {
-  const st = sitting ? 2 : dance > 0 ? 1 : 0;
-  broadcast({
-    t: 's', id: myId,
-    x: +pos.x.toFixed(2), z: +pos.z.toFixed(2),
-    f: +face.toFixed(2), s: st,
-    n: myName, k: myK
-  });
-}
-
-function handleMessage(msg, fromId) {
-  if (!msg || !msg.t) return;
-  if (msg.t === 's') {
-    upsertRemote(fromId, msg);
-  } else if (msg.t === 'l') {
-    removeRemote(fromId);
-  } else if (msg.t === 'p') {
-    addLive(msg);
-    broadcast(msg, fromId);
-  } else if (msg.t === 'hello') {
-    if (msg.to === myId) sendState();
-  }
-}
-
 const liveList = [];
 function addLive(m) {
   if (!m.pid || !m.src) return false;
@@ -360,152 +335,64 @@ function addLive(m) {
 }
 
 function shareLive(add) {
+  if (!window.FB || !window.FB.db) return;
   add.forEach((r, i) => {
-    const m = { t: 'p', pid: myId + Date.now() + i, from: myId,
-                title: r.title, src: r.src };
+    const m = { t: 'p', pid: myId + Date.now() + i, from: myId, title: r.title, src: r.src };
     addLive(m);
-    broadcast(m);
+    window.FB.set(window.FB.ref(window.FB.db, 'paintings/' + m.pid), m);
   });
 }
-
-function connectPeerJS() {
-  if (myPeer) { try { myPeer.destroy(); } catch(e) {} myPeer = null; }
-  peers.clear();
-
-  const pid = ROOM_HASH + '-' + myId;
-  myPeer = new Peer(pid, { config: ICE_CONFIG });
-
-  myPeer.on('open', (id) => {
-    connected = true;
-    console.log('[PeerJS] open', id);
-    document.getElementById('who').title = 'Подключено: ' + id;
-    discoverPeers();
-  });
-
-  myPeer.on('error', (err) => {
-    console.warn('[PeerJS] error', err.type, err);
-    connected = false;
-    if (err.type === 'unavailable-id') {
-      setTimeout(connectPeerJS, 1500 + Math.random() * 1500);
-    } else {
-      scheduleReconnect();
-    }
-  });
-
-  myPeer.on('disconnected', () => {
-    connected = false;
-    scheduleReconnect();
-  });
-
-  myPeer.on('connection', (conn) => {
-    setupConnection(conn, true);
-  });
-}
-
-function scheduleReconnect() {
-  if (reconnectTimer) return;
-  reconnectTimer = setTimeout(() => {
-    reconnectTimer = null;
-    if (!connected) connectPeerJS();
-  }, 2000 + Math.random() * 3000);
-}
-
-function setupConnection(conn, isIncoming) {
-  const peerId = conn.peer;
-  conn.on('open', () => {
-    peers.set(peerId, { conn, lastSeen: performance.now() });
-    console.log('[PeerJS] connected to', peerId);
-    try { conn.send({ t: 'hello', to: peerId }); } catch(e) {}
-    conn.send({ t: 's', id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2),
-                f: +face.toFixed(2), s: sitting ? 2 : dance > 0 ? 1 : 0,
-                n: myName, k: myK });
-    liveList.forEach(m => { try { conn.send(m); } catch(e) {} });
-  });
-  conn.on('data', (msg) => {
-    const p = peers.get(peerId);
-    if (p) p.lastSeen = performance.now();
-    handleMessage(msg, peerId);
-  });
-  conn.on('close', () => {
-    console.log('[PeerJS] closed', peerId);
-    peers.delete(peerId);
-    removeRemote(peerId);
-  });
-  conn.on('error', (e) => console.warn('[PeerJS] conn error', peerId, e));
-}
-
-function discoverPeers() {
-  let known = [];
-  try { known = JSON.parse(localStorage.getItem('hm-peers') || '[]'); } catch(e) {}
-  if (!known.includes(myId)) known.push(myId);
-  try { localStorage.setItem('hm-peers', JSON.stringify(known.slice(-50))); } catch(e) {}
-
-  known.forEach(pid => {
-    if (pid === myId) return;
-    const fullId = ROOM_HASH + '-' + pid;
-    if (peers.has(fullId)) return;
-    if (myPeer.disconnected) return;
-    try {
-      const conn = myPeer.connect(fullId, { reliable: true, serialization: 'json' });
-      setupConnection(conn, false);
-    } catch(e) {}
-  });
-}
-
-setInterval(() => {
-  peers.forEach((p, id) => {
-    if (p.conn && !p.conn.open) {
-      peers.delete(id); removeRemote(id);
-    } else if (performance.now() - p.lastSeen > 30000) {
-      try { p.conn.close(); } catch(e) {}
-      peers.delete(id); removeRemote(id);
-    }
-  });
-  if (connected && myPeer) discoverPeers();
-  if (started && myName) {
-    const st = sitting ? 2 : dance > 0 ? 1 : 0;
-    const key = [pos.x.toFixed(2), pos.z.toFixed(2), face.toFixed(2), st].join();
-    if (key !== lastKey || performance.now() - lastSent > 2500) {
-      lastKey = key; lastSent = performance.now();
-      sendState();
-    }
-  }
-}, 500);
 
 async function connect() {
-  if (window.claude && claude.use) {
-    try { db = await claude.use('db'); } catch(e) { db = null; }
-    if (db) {
-      try {
-        db.collection('photos').onSnapshot(async s => {
-          const rows = s.docs.map(d => ({ id: d.id, ...d.data() }))
-                           .filter(d => d.src)
-                           .sort((a,b) => (a.ts||0) - (b.ts||0));
-          dbIds = rows.map(r => r.id);
-          dbPhotos = rows;
-          if (rows.length) buildGallery(await fromRecords(rows));
-          else if (!records.length) buildGallery(await Promise.all([0,1,2,3,4,5].map(demoArt)));
-        }, () => {});
-      } catch(e) {}
-    }
+  if (!window.FB || !window.FB.db) {
+    console.warn('Firebase не инициализирован. Проверьте ключи в начале скрипта.');
+    return;
   }
-  try { connectPeerJS(); } catch(e) { console.warn('PeerJS init failed', e); }
-}
+  const { db, ref, set, onValue, onDisconnect } = window.FB;
 
-async function saveShared(add) {
-  if (!db) return false;
-  try {
-    const free = Math.max(0, slots.length - dbPhotos.length);
-    if (!free) return false;
-    let i = 0;
-    for (const r of add.slice(0, free)) {
-      i++;
-      await db.doc('photos/p' + Date.now() + '_' + i).set({
-        src: r.src, title: r.title, ts: Date.now() + i
+  const myRef = ref(db, 'users/' + myId);
+  onDisconnect(myRef).remove(); 
+
+  const usersRef = ref(db, 'users');
+  onValue(usersRef, (snap) => {
+    const data = snap.val() || {};
+    const activeIds = new Set();
+    
+    for (const id in data) {
+      if (id === myId) continue;
+      activeIds.add(id);
+      const p = data[id];
+      if (p && p.t > Date.now() - 15000) { 
+        upsertRemote(id, p);
+      }
+    }
+    
+    remotes.forEach((r, id) => {
+      if (!activeIds.has(id)) removeRemote(id);
+    });
+    updWho();
+  });
+
+  const paintsRef = ref(db, 'paintings');
+  onValue(paintsRef, (snap) => {
+    const data = snap.val() || {};
+    for (const id in data) {
+      addLive(data[id]);
+    }
+  });
+
+  setInterval(() => {
+    if (!started || !myName) return;
+    const st = sitting ? 2 : dance > 0 ? 1 : 0;
+    const key = [pos.x.toFixed(2), pos.z.toFixed(2), face.toFixed(2), st].join();
+    if (key !== lastKey || Date.now() - lastSent > 2000) {
+      lastKey = key; lastSent = Date.now();
+      set(myRef, {
+        id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2),
+        f: +face.toFixed(2), s: st, n: myName, k: myK, t: Date.now()
       });
     }
-    return true;
-  } catch(e) { return false; }
+  }, 500);
 }
 
 /* ============================================================
