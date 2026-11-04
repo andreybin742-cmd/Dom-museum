@@ -18,8 +18,7 @@ button:active{transform:scale(.96)}
 #hud{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);padding:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;z-index:5}
 #hud>*{pointer-events:auto}
 #hud .glass{padding:6px 12px;font-size:13px;display:flex;gap:8px;align-items:center}
-#menuBtn{cursor:pointer;font-weight:bold;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:8px}
-#timeBtn{cursor:pointer;font-weight:bold;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:8px}
+#menuBtn,#timeBtn{cursor:pointer;font-weight:bold;padding:6px 10px;background:rgba(255,255,255,.1);border-radius:8px}
 
 input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px;width:210px;text-align:center}
 
@@ -30,6 +29,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 #actDelete{background:#d9534f;color:#fff}
 #actHand{background:#4caf50;color:#fff}
 #actChat{background:#2f5d8a;color:#fff}
+#actJump{background:#fff;color:#000;display:block;padding:10px 16px;font-size:20px;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center}
 
 #stick{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;display:none;z-index:4;touch-action:none;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
 #knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -54,6 +54,10 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 #modalOverlay h2{margin-top:0}
 #modalOverlay input{width:100%;margin-bottom:12px;box-sizing:border-box}
 #modalOverlay button{padding:10px 20px;margin:0 4px}
+
+#chatModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:11;padding:20px}
+#chatModal .glass{padding:20px;width:100%;max-width:400px;text-align:center}
+#chatInput{width:100%;margin-bottom:16px;padding:12px;font-size:16px;box-sizing:border-box}
 
 #load{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:6;padding:8px 16px;display:none;font-size:14px;font-weight:600;background:rgba(0,0,0,.8);border-radius:20px}
 
@@ -88,6 +92,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
   <button id="actView">👁 Посмотреть</button>
   <button id="actAdd">📷 Повесить фото</button>
   <button id="actSit">🪑 Присесть</button>
+  <button id="actJump">⬆️</button>
   <button id="actChat" style="display:block">💬 Написать</button>
 </div>
 
@@ -116,10 +121,10 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
   </div>
 </div>
 
-<div id="chatModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);align-items:center;justify-content:center;z-index:11;padding:20px">
-  <div class="glass" style="padding:20px;width:100%;max-width:400px;text-align:center">
+<div id="chatModal">
+  <div class="glass">
     <h2>Сообщение</h2>
-    <input id="chatInput" placeholder="Введите текст..." maxlength="40" autocomplete="off" style="width:100%;margin-bottom:16px;padding:12px;font-size:16px;box-sizing:border-box">
+    <input id="chatInput" placeholder="Введите текст..." maxlength="40" autocomplete="off">
     <div>
       <button id="chatSend" class="btn">Отправить</button>
       <button id="chatCancel" class="alt">Отмена</button>
@@ -151,7 +156,6 @@ window.FB = null;
 try {
   const app = initializeApp(firebaseConfig);
   window.FB = { db: getDatabase(app), ref, set, onValue, onDisconnect, remove };
-  console.log("Firebase OK");
 } catch(e) { console.error("Ошибка Firebase:", e); }
 </script>
 
@@ -194,7 +198,6 @@ scene.add(hemiLight);
 const sun=new THREE.DirectionalLight(0xfff0dd,.55);sun.position.set(6,4.4,4);sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-15,right:15,top:8,bottom:-8,near:1,far:20});sun.shadow.bias=-.0005;sun.shadow.camera.updateProjectionMatrix();scene.add(sun);scene.add(sun.target);
 
-// Потолочные лампы (управляются кнопкой День/Ночь)
 const lampMat=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:0.1});
 for(let i=0;i<4;i++){const m=new THREE.Mesh(new THREE.BoxGeometry(2.4,.04,.3),lampMat);m.position.set(-9.75+i*6.5,H-.02,0);scene.add(m)}
 const spots = [];
@@ -234,11 +237,11 @@ benches.forEach(([x,z])=>{const g=new THREE.Group();
 const rc=cvs(256,256),rx=rc.getContext('2d');rx.fillStyle='#6b2b2b';rx.fillRect(0,0,256,256);rx.strokeStyle='#d9b26a';rx.lineWidth=6;rx.strokeRect(12,12,232,232);rx.lineWidth=2;rx.strokeRect(26,26,204,204);
 const rug=new THREE.Mesh(new THREE.PlaneGeometry(14,3.4),new THREE.MeshStandardMaterial({map:tex(rc),roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.y=.005;rug.receiveShadow=true;scene.add(rug);
 
-/* Слоты картин */
+/* Слоты */
 const slots=[];const N=6;
 for(let i=0;i<N;i++){
   const x=-W/2+(i+.5)*W/N;
-  if(i!==2) slots.push({id:'n'+i,p:[x,-D/2],n:[0,1],r:0}); // Пропускаем центральный слот
+  if(i!==2) slots.push({id:'n'+i,p:[x,-D/2],n:[0,1],r:0});
   slots.push({id:'s'+i,p:[x,D/2],n:[0,-1],r:Math.PI});
 }
 [-3.2,3.2].forEach((z,idx)=>{slots.push({id:'w'+idx,p:[-W/2,z],n:[1,0],r:Math.PI/2});slots.push({id:'e'+idx,p:[W/2,z],n:[-1,0],r:-Math.PI/2})});
@@ -266,7 +269,6 @@ function addArtToFrame(g, img, title, author, id, slotId){
   const T=.12,B=[[w+.5+2*T,T,0,(h+.5+T)/2],[w+.5+2*T,T,0,-(h+.5+T)/2],[T,h+.5,(w+.5+T)/2,0],[T,h+.5,-(w+.5+T)/2,0]];
   B.forEach(([bw,bh,bx,by])=>{const m=new THREE.Mesh(new THREE.BoxGeometry(bw,bh,.09),frameMat);m.position.set(bx,by,.045);m.castShadow=true;g.add(m)});
   
-  // Красивая табличка
   const pc=cvs(512,128),px=pc.getContext('2d');
   px.fillStyle='#111'; px.fillRect(0,0,512,128);
   px.fillStyle='#c9a85c'; px.fillRect(4,4,504,120);
@@ -298,45 +300,136 @@ slots.forEach(s => {
   frames.push({ pos: new THREE.Vector3(g.position.x, 1.75, g.position.z), n: new THREE.Vector3(s.n[0], 0, s.n[1]), group: g, id: s.id });
 });
 
-/* Телевизор и Камера */
+/* Телевизор */
 const tvGroup = new THREE.Group();
-tvGroup.position.set(0, 1.1, 0); // По центру между лавочками
+tvGroup.position.set(0, 1.1, 0);
 scene.add(tvGroup);
-
-// Тумба
 const stand = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.8, 1.2), new THREE.MeshStandardMaterial({color:0x2a1c12, roughness:.6}));
 stand.position.y = -0.6; tvGroup.add(stand);
-
-// Корпус ТВ
 const tvBody = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.4, 0.8), new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:.4, metalness:.2}));
 tvGroup.add(tvBody);
-
-// Экран ТВ
 const tvScreenMat = new THREE.MeshStandardMaterial({color:0x000000, emissive:0x111111});
 const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.1), tvScreenMat);
 tvScreen.position.z = 0.41;
 tvGroup.add(tvScreen);
-
-// Виртуальная камера для ТВ
 const tvCamera = new THREE.PerspectiveCamera(70, 1.7/1.1, 0.1, 50);
-tvCamera.position.set(-W/2 + 0.5, H - 0.5, -D/2 + 0.5); // В углу под потолком
+tvCamera.position.set(-W/2 + 0.5, H - 0.5, -D/2 + 0.5);
 tvCamera.lookAt(0, 0, 0);
-
-// Корпус камеры (визуальный)
 const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.5), new THREE.MeshStandardMaterial({color:0x333333}));
 camBody.position.copy(tvCamera.position);
 camBody.lookAt(0,0,0);
 scene.add(camBody);
-// Красный огонек
 const camLed = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color:0xff0000}));
 camLed.position.set(0, 0.1, 0.26);
 camBody.add(camLed);
-
 const tvRenderTarget = new THREE.WebGLRenderTarget(512, 320);
 tvScreenMat.map = tvRenderTarget.texture;
 tvScreenMat.emissiveMap = tvRenderTarget.texture;
 tvScreenMat.emissive.setHex(0xffffff);
 tvScreenMat.needsUpdate = true;
+
+/* --- СОЗДАНИЕ УЛУЧШЕННОГО АВАТАРА --- */
+function createSimsAvatar(look) {
+  const g = new THREE.Group();
+  const M = (c, r=0.7) => new THREE.MeshStandardMaterial({color:c, roughness:r});
+  const skinM = M(look.skin, 0.6), shirtM = M(look.shirt, 0.8), pantsM = M(look.pants, 0.8);
+  const hairM = M(look.hair, 0.7), shoeM = M(0x151515, 0.5);
+  
+  // Торс
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.6, 16), shirtM);
+  torso.position.y = 1.15; torso.castShadow = true; g.add(torso);
+  
+  // Шея
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.1, 8), skinM);
+  neck.position.y = 1.48; neck.castShadow = true; g.add(neck);
+  
+  // Голова
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), skinM);
+  head.position.y = 1.63; head.castShadow = true; g.add(head);
+  
+  // Нос
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 0.05), skinM);
+  nose.position.set(0, 1.62, 0.16); g.add(nose);
+  
+  // Глаза (белки + зрачки)
+  const eyeW = M(0xffffff, 0.1);
+  const eyeB = M(0x111111, 0.1);
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeW); eyeL.position.set(-0.06, 1.66, 0.13); g.add(eyeL);
+  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeW); eyeR.position.set(0.06, 1.66, 0.13); g.add(eyeR);
+  const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), eyeB); pupilL.position.set(-0.06, 1.66, 0.16); g.add(pupilL);
+  const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), eyeB); pupilR.position.set(0.06, 1.66, 0.16); g.add(pupilR);
+  
+  // Веки (для моргания)
+  const eyelid = new THREE.Mesh(new THREE.SphereGeometry(0.036, 8, 8, 0, Math.PI*2, 0, Math.PI/2), skinM);
+  eyelid.position.set(0, 1.66, 0.13); eyelid.scale.set(1.1, 1.1, 1.1); g.add(eyelid); // Упрощенно: будем двигать вверх/вниз
+  
+  // Рот
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.01, 0.01), M(0xcc3333, 0.5));
+  mouth.position.set(0, 1.56, 0.15); g.add(mouth);
+  
+  // Уши
+  const earL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), skinM); earL.position.set(-0.16, 1.63, 0); g.add(earL);
+  const earR = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), skinM); earR.position.set(0.16, 1.63, 0); g.add(earR);
+  
+  // Волосы
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16, 0, Math.PI*2, 0, Math.PI/1.8), hairM);
+  hair.position.y = 1.65; hair.scale.set(1.05, 1.1, 1.05); hair.castShadow = true; g.add(hair);
+  // Челка
+  const bang = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 0.1), hairM);
+  bang.position.set(0, 1.73, 0.12); g.add(bang);
+
+  // Руки (плечо, предплечье, кисть)
+  const armLGroup = new THREE.Group(); armLGroup.position.set(-0.25, 1.38, 0); g.add(armLGroup);
+  const armL_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.3), shirtM); armL_upper.position.y = -0.15; armL_upper.castShadow = true; armLGroup.add(armL_upper);
+  const elbowL = new THREE.Group(); elbowL.position.y = -0.3; armLGroup.add(elbowL);
+  const armL_lower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25), skinM); armL_lower.position.y = -0.125; armL_lower.castShadow = true; elbowL.add(armL_lower);
+  const handL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), skinM); handL.position.y = -0.25; elbowL.add(handL);
+
+  const armRGroup = new THREE.Group(); armRGroup.position.set(0.25, 1.38, 0); g.add(armRGroup);
+  const armR_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.3), shirtM); armR_upper.position.y = -0.15; armR_upper.castShadow = true; armRGroup.add(armR_upper);
+  const elbowR = new THREE.Group(); elbowR.position.y = -0.3; armRGroup.add(elbowR);
+  const armR_lower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25), skinM); armR_lower.position.y = -0.125; armR_lower.castShadow = true; elbowR.add(armR_lower);
+  const handR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), skinM); handR.position.y = -0.25; elbowR.add(handR);
+
+  // Ноги (бедро, голень, стопа)
+  const legLGroup = new THREE.Group(); legLGroup.position.set(-0.1, 0.85, 0); g.add(legLGroup);
+  const legL_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.4), pantsM); legL_upper.position.y = -0.2; legL_upper.castShadow = true; legLGroup.add(legL_upper);
+  const kneeL = new THREE.Group(); kneeL.position.y = -0.4; legLGroup.add(kneeL);
+  const legL_lower = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.35), pantsM); legL_lower.position.y = -0.175; legL_lower.castShadow = true; kneeL.add(legL_lower);
+  const footL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), shoeM); footL.position.set(0, -0.37, 0.05); footL.castShadow = true; kneeL.add(footL);
+
+  const legRGroup = new THREE.Group(); legRGroup.position.set(0.1, 0.85, 0); g.add(legRGroup);
+  const legR_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.4), pantsM); legR_upper.position.y = -0.2; legR_upper.castShadow = true; legRGroup.add(legR_upper);
+  const kneeR = new THREE.Group(); kneeR.position.y = -0.4; legRGroup.add(kneeR);
+  const legR_lower = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.35), pantsM); legR_lower.position.y = -0.175; legR_lower.castShadow = true; kneeR.add(legR_lower);
+  const footR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.22), shoeM); footR.position.set(0, -0.37, 0.05); footR.castShadow = true; kneeR.add(footR);
+
+  return { g, head, eyelid, armLGroup, elbowL, armRGroup, elbowR, legLGroup, kneeL, legRGroup, kneeR, torso };
+}
+
+function label(name) {
+  const c = cvs(512,128), x = c.getContext('2d');
+  x.fillStyle = 'rgba(20,18,24,.7)'; x.beginPath(); x.roundRect(8,20,496,88,44); x.fill();
+  x.fillStyle = '#fff'; x.font = '600 54px system-ui,sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name.slice(0,16), 256, 66);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true }));
+  s.scale.set(1.5,.375,1); s.position.y = 2.2; s.renderOrder = 10; return s;
+}
+
+function makeMessageSprite(text) {
+  const c = cvs(512, 128), x = c.getContext('2d');
+  x.fillStyle = 'rgba(255,255,255,0.95)';
+  x.beginPath(); x.roundRect(10,10,492,108,20); x.fill();
+  x.beginPath(); x.moveTo(256,118); x.lineTo(240,90); x.lineTo(272,90); x.fill();
+  x.fillStyle = '#111'; x.font = 'bold 40px system-ui,sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText(text.slice(0, 30), 256, 60);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true, depthTest: false }));
+  s.scale.set(2.5, 0.625, 1); s.position.y = 2.7; s.renderOrder = 11;
+  return s;
+}
 
 /* Загрузка фото */
 const fileInput = document.getElementById('file');
@@ -371,11 +464,10 @@ function shrink(file){
 
 fileInput.addEventListener('change', async (e) => {
   if(!e.target.files.length || !pendingSlotId) return;
-  const L = document.getElementById('load'); L.style.display='block'; L.textContent='Сжимаю фото…';
+  const L = document.getElementById('load'); L.style.display='block'; L.textContent='Сжимаю…';
   const file = e.target.files[0];
   pendingBase64 = await shrink(file);
   L.style.display='none'; e.target.value='';
-  
   if (pendingBase64) {
     artTitleInput.value = file.name.replace(/\.[^.]+$/,'');
     artAuthorInput.value = myName;
@@ -389,7 +481,6 @@ document.getElementById('artSave').onclick = async () => {
   const title = artTitleInput.value.trim() || 'Без названия';
   const author = artAuthorInput.value.trim() || 'Неизвестный';
   modalOverlay.style.display = 'none';
-  
   if (pendingBase64 && pendingSlotId) {
     const L = document.getElementById('load'); L.style.display='block'; L.textContent='Сохраняю…';
     const pid = myId + '_' + Date.now();
@@ -413,16 +504,10 @@ async function applyPaintings(data) {
     if (p) {
       if (!frameObj.userData.loadedPid || frameObj.userData.loadedPid !== p.pid) {
         const img = await tryImg(p.src);
-        if (img) {
-          addArtToFrame(frameObj, img, p.title, p.author, p.pid, slotId);
-          frameObj.userData.loadedPid = p.pid;
-        }
+        if (img) { addArtToFrame(frameObj, img, p.title, p.author, p.pid, slotId); frameObj.userData.loadedPid = p.pid; }
       }
     } else {
-      if (frameObj.userData.loadedPid) {
-         addEmptyFrameVisual(frameObj);
-         frameObj.userData.loadedPid = null;
-      }
+      if (frameObj.userData.loadedPid) { addEmptyFrameVisual(frameObj); frameObj.userData.loadedPid = null; }
     }
   }
   updateGalleryUI();
@@ -433,57 +518,19 @@ const myId = Math.random().toString(36).slice(2, 10);
 let authed = false, myName = '', myK = 0, labelObj = null;
 const remotes = new Map(); 
 const SH = [0xc0392b,0x2f5d8a,0x2e8b57,0xd4a017,0x8e44ad,0xe67e22,0x16a085,0xd35d8c];
-const lookOf = k => ({shirt:SH[k%8],pants:0x2b2b34,hair:0x2a1c12,skin:0xe0b08c});
-
-function label(name) {
-  const c = cvs(512,128), x = c.getContext('2d');
-  x.fillStyle = 'rgba(20,18,24,.7)'; x.beginPath(); x.roundRect(8,20,496,88,44); x.fill();
-  x.fillStyle = '#fff'; x.font = '600 54px system-ui,sans-serif';
-  x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(name.slice(0,16), 256, 66);
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true }));
-  s.scale.set(1.5,.375,1); s.position.y = 2.1; s.renderOrder = 10; return s;
-}
-
-function makeAvatar(l) {
-  const g = new THREE.Group();
-  const M = c => new THREE.MeshStandardMaterial({ color:c, roughness:.75 });
-  const sk = M(l.skin), sh = M(l.shirt), pa = M(l.pants), hr = M(l.hair), so = M(0x151515);
-  const add = (geo,m,x,y,z,p) => { const o=new THREE.Mesh(geo,m); o.position.set(x,y,z); o.castShadow=true; (p||g).add(o); return o; };
-  add(new THREE.CylinderGeometry(.21,.18,.7,20), sh, 0,1.2,0);
-  add(new THREE.SphereGeometry(.21,20,12), sh, 0,1.55,0).scale.y = .45;
-  add(new THREE.SphereGeometry(.14,20,16), sk, 0,1.68,0);
-  add(new THREE.SphereGeometry(.15,20,16,0,Math.PI*2,0,Math.PI/1.7), hr, 0,1.7,-.02);
-  const limb = (x,y,len,r,m,foot) => {
-    const p = new THREE.Group(); p.position.set(x,y,0); g.add(p);
-    add(new THREE.CylinderGeometry(r,r*.9,len,10), m, 0,-len/2,0,p);
-    if (foot) add(new THREE.BoxGeometry(.13,.07,.24), so, 0,-len-.02,.05,p);
-    else add(new THREE.SphereGeometry(r*.95,10,8), sk, 0,-len,0,p);
-    return p;
-  };
-  return { g, armL: limb(-.27,1.42,.55,.055,sh), armR: limb(.27,1.42,.55,.055,sh), legL: limb(-.1,.85,.85,.075,pa,1), legR: limb(.1,.85,.85,.075,pa,1) };
-}
-
-function makeMessageSprite(text) {
-  const c = cvs(512, 128), x = c.getContext('2d');
-  x.fillStyle = 'rgba(255,255,255,0.95)';
-  x.beginPath(); x.roundRect(10,10,492,108,20); x.fill();
-  x.beginPath(); x.moveTo(256,118); x.lineTo(240,90); x.lineTo(272,90); x.fill();
-  x.fillStyle = '#111'; x.font = 'bold 40px system-ui,sans-serif';
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(text.slice(0, 30), 256, 60);
-  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding;
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map:t, transparent:true, depthTest: false }));
-  s.scale.set(2.5, 0.625, 1); s.position.y = 2.6; s.renderOrder = 11;
-  return s;
-}
+const PA = [0x2b2b34,0x3d4a63,0x5a4630,0x333f33,0x4a2f4a,0x6b6b6b];
+const HA = [0x2a1c12,0x0e0e0e,0x7a4a21,0xc9a35a,0x8a8a8a];
+const SK = [0xe0b08c,0xf1c9a5,0xc68642,0x8d5524];
+const lookOf = k => ({shirt:SH[k%8],pants:PA[(k*3+1)%6],hair:HA[(k*5+2)%5],skin:SK[(k*7+3)%4]});
 
 function upsertRemote(id, pr) {
   let r = remotes.get(id);
   if (!r) {
-    const a = makeAvatar(lookOf(pr.k|0)); a.g.add(label(pr.n||'Гость')); a.g.position.set(pr.x,0,pr.z);
+    const a = createSimsAvatar(lookOf(pr.k|0)); 
+    a.g.add(label(pr.n||'Гость')); 
+    a.g.position.set(pr.x,0,pr.z);
     scene.add(a.g);
-    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0, shakeUntil:0, msgSprite:null };
+    r = { a, n: pr.n, face: pr.f||0, speed:0, t:0, dt:0, tx:pr.x, tz:pr.z, tf:pr.f||0, s:pr.s||0, shakeUntil:0, msgSprite:null, blinkT: Math.random()*3 };
     remotes.set(id, r);
   }
   r.tx = pr.x; r.tz = pr.z; r.tf = pr.f||0; r.s = pr.s||0;
@@ -496,10 +543,7 @@ function upsertRemote(id, pr) {
       r.msgSprite.userData.text = pr.msg;
       r.a.g.add(r.msgSprite);
     }
-  } else if (r.msgSprite) {
-    r.a.g.remove(r.msgSprite);
-    r.msgSprite = null;
-  }
+  } else if (r.msgSprite) { r.a.g.remove(r.msgSprite); r.msgSprite = null; }
 }
 
 let lastSent = 0, lastKey = '';
@@ -548,9 +592,7 @@ function updateGalleryUI() {
     el.innerHTML = `<img src="${p.src}"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:10px;padding:4px;text-align:center">${p.title||'Без названия'}</div><button class="gal-del" data-slot="${slotId}">Удалить</button>`;
     galGrid.appendChild(el);
   }
-  if (!Object.keys(window.currentPaintings).length) {
-    galGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;opacity:.5">В музее пока нет картин</p>';
-  }
+  if (!Object.keys(window.currentPaintings).length) galGrid.innerHTML = '<p style="grid-column:1/-1;text-align:center;opacity:.5">В музее пока нет картин</p>';
 }
 galGrid.addEventListener('click', async e => {
   if (e.target.classList.contains('gal-del')) {
@@ -558,27 +600,21 @@ galGrid.addEventListener('click', async e => {
     if(confirm('Удалить эту картину?')) await window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + slotId));
   }
 });
-
 document.getElementById('galBtn').onclick = () => { updateGalleryUI(); gal.style.display = 'flex'; };
 document.getElementById('galClose').onclick = () => gal.style.display = 'none';
 document.getElementById('menuBtn').onclick = () => { if(confirm('Выйти в меню?')) location.reload(); };
 
-/* Персонаж */
-const avatar=new THREE.Group();
-const skin=new THREE.MeshStandardMaterial({color:0xe0b08c,roughness:.7}),shirt=new THREE.MeshStandardMaterial({color:0x2f5d8a,roughness:.8}),pants=new THREE.MeshStandardMaterial({color:0x2b2b34,roughness:.85}),hairM=new THREE.MeshStandardMaterial({color:0x2a1c12,roughness:.6}),shoe=new THREE.MeshStandardMaterial({color:0x151515,roughness:.5});
-function part(geo,m,x,y,z,p){const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);o.castShadow=true;(p||avatar).add(o);return o}
-part(new THREE.CylinderGeometry(.21,.18,.7,20),shirt,0,1.2,0);
-part(new THREE.SphereGeometry(.21,20,12),shirt,0,1.55,0).scale.y=.45;
-part(new THREE.SphereGeometry(.14,20,16),skin,0,1.68,0);
-part(new THREE.SphereGeometry(.15,20,16,0,Math.PI*2,0,Math.PI/1.7),hairM,0,1.7,-.02);
-function limb(x,y,len,r,mat,foot){const p=new THREE.Group();p.position.set(x,y,0);avatar.add(p);part(new THREE.CylinderGeometry(r,r*.9,len,10),mat,0,-len/2,0,p);if(foot)part(new THREE.BoxGeometry(.13,.07,.24),shoe,0,-len-.02,.05,p);else part(new THREE.SphereGeometry(r*.95,10,8),skin,0,-len,0,p);return p}
-const armL=limb(-.27,1.42,.55,.055,shirt),armR=limb(.27,1.42,.55,.055,shirt),legL=limb(-.1,.85,.85,.075,pants,1),legR=limb(.1,.85,.85,.075,pants,1);
-scene.add(avatar);
+/* Персонаж игрока */
+const playerLook = lookOf(myK);
+const playerAvatar = createSimsAvatar(playerLook);
+scene.add(playerAvatar.g);
 
 const pos=new THREE.Vector3(0,0,5.2);let yaw=0,pitch=.25,third=true,started=false,vel=new THREE.Vector3(),face=0,walkT=0;
 let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null,nearFrame=null,nearRemote=null;
 let isShaking = 0; 
 let myMsgText = '', myMsgTime = 0, myMsgSprite = null;
+let playerBlinkT = Math.random()*3;
+let jumpY = 0, isJumping = false;
 const keys={};const isTouch=matchMedia('(pointer:coarse)').matches;
 
 let isDragging = false;
@@ -592,15 +628,17 @@ const btnDelete = document.getElementById('actDelete');
 const btnHand = document.getElementById('actHand');
 const btnChat = document.getElementById('actChat');
 const btnSit = document.getElementById('actSit');
+const btnJump = document.getElementById('actJump');
+
+btnJump.onclick = () => { if (!isJumping && !sitting && dance<=0) isJumping = true; };
+document.getElementById('danceBtn').onclick = startDance;
+document.getElementById('sitBtn').onclick = toggleSit;
 
 btnView.onclick = () => { if(nearFrame && nearFrame.userData.art) openLb(nearFrame.userData.art); };
 btnAdd.onclick = () => { if(nearFrame) { pendingSlotId = nearFrame.userData.slotId; fileInput.click(); } };
 btnDelete.onclick = () => { 
-  if(nearFrame && nearFrame.userData.art) {
-    if(confirm('Удалить эту картину?')) window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + nearFrame.userData.slotId));
-  }
+  if(nearFrame && nearFrame.userData.art) { if(confirm('Удалить эту картину?')) window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + nearFrame.userData.slotId)); }
 };
-btnSit.onclick = toggleSit;
 btnHand.onclick = () => {
   if (nearRemote && isShaking <= 0) {
     isShaking = 2; 
@@ -608,18 +646,15 @@ btnHand.onclick = () => {
     showPopup('🤝 Вы пожали руку ' + nearRemote.n);
   }
 };
-btnChat.onclick = () => {
-  document.getElementById('chatModal').style.display = 'flex';
-  document.getElementById('chatInput').focus();
-};
+btnChat.onclick = () => { document.getElementById('chatModal').style.display = 'flex'; document.getElementById('chatInput').focus(); };
 
 document.getElementById('chatSend').onclick = () => {
   const val = document.getElementById('chatInput').value.trim();
   if (val) {
     myMsgText = val; myMsgTime = Date.now();
-    if (myMsgSprite) avatar.remove(myMsgSprite);
+    if (myMsgSprite) playerAvatar.g.remove(myMsgSprite);
     myMsgSprite = makeMessageSprite(myMsgText);
-    avatar.add(myMsgSprite);
+    playerAvatar.g.add(myMsgSprite);
     window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), msg: myMsgText, msgT: myMsgTime });
   }
   document.getElementById('chatModal').style.display = 'none';
@@ -629,6 +664,7 @@ document.getElementById('chatCancel').onclick = () => { document.getElementById(
 addEventListener('keydown', e => {
   if(e.target.tagName==='INPUT') return;
   keys[e.code]=true;
+  if (e.code==='Space') btnJump.click();
   if (e.code==='KeyT') btnChat.click();
   if (e.code==='KeyF') toggleSit();
   if (e.code==='KeyG') startDance();
@@ -643,8 +679,7 @@ addEventListener('keyup', e=>keys[e.code]=false);
 
 function showPopup(txt) {
   const el = document.createElement('div'); el.className='popup-text'; el.textContent=txt;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(), 2000);
+  document.body.appendChild(el); setTimeout(()=>el.remove(), 2000);
 }
 
 function clampP(){pitch=Math.max(third?.05:-1.3,Math.min(third?1.1:1.3,pitch))}
@@ -680,10 +715,19 @@ document.getElementById('go').onclick=()=>{
   if(isTouch) document.getElementById('stick').style.display='block';
 };
 function applyLook() {
-  const L = lookOf(myK);
-  shirt.color.set(L.shirt); pants.color.set(L.pants); hairM.color.set(L.hair); skin.color.set(L.skin);
-  if (labelObj) avatar.remove(labelObj);
-  labelObj = label(myName); avatar.add(labelObj);
+  playerAvatar.g.remove(playerAvatar.g.children[0]); // Удаляем старый
+  const newAvatar = createSimsAvatar(lookOf(myK));
+  playerAvatar.g.add(newAvatar.g);
+  playerAvatar.head = newAvatar.head;
+  playerAvatar.eyelid = newAvatar.eyelid;
+  playerAvatar.armLGroup = newAvatar.armLGroup; playerAvatar.elbowL = newAvatar.elbowL;
+  playerAvatar.armRGroup = newAvatar.armRGroup; playerAvatar.elbowR = newAvatar.elbowR;
+  playerAvatar.legLGroup = newAvatar.legLGroup; playerAvatar.kneeL = newAvatar.kneeL;
+  playerAvatar.legRGroup = newAvatar.legRGroup; playerAvatar.kneeR = newAvatar.kneeR;
+  playerAvatar.torso = newAvatar.torso;
+  
+  if (labelObj) playerAvatar.g.remove(labelObj);
+  labelObj = label(myName); playerAvatar.g.add(labelObj);
 }
 
 let joy=null,look=null,jv={x:0,y:0};const stick=document.getElementById('stick'),knob=document.getElementById('knob');
@@ -740,16 +784,92 @@ function frame() {
   
   const speed=vel.length(); walkT+=dt*(speed*2.3);
   if(speed>.15){const target=Math.atan2(vel.x,vel.z);let d=target-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10)}
-  const sw=Math.sin(walkT)*Math.min(1,speed/2.4)*.8;
-  let by=Math.abs(Math.sin(walkT))*.025*Math.min(1,speed/2),ry=face;
-  armL.rotation.z=armR.rotation.z=0;avatar.rotation.z=0;
   
-  if (isShaking > 0) { isShaking -= dt; armL.rotation.x = -1.4; armL.rotation.z = 0; }
-  else if(sitting){legL.rotation.x=legR.rotation.x=-1.5;armL.rotation.x=armR.rotation.x=-.5;by=-.27}
-  else if(dance>0){dance-=dt;danceT+=dt;const s=danceT*9;legL.rotation.x=Math.sin(s)*.6;legR.rotation.x=-Math.sin(s)*.6;armL.rotation.x=-2.4+Math.sin(s)*.5;armR.rotation.x=-2.4-Math.sin(s)*.5;armL.rotation.z=-.4;armR.rotation.z=.4;by=Math.abs(Math.sin(s))*.1;ry=face+Math.sin(danceT*3)*.7+danceT*1.2;avatar.rotation.z=Math.sin(s)*.06}
-  else{legL.rotation.x=sw;legR.rotation.x=-sw;armL.rotation.x=-sw*.8;armR.rotation.x=sw*.8}
+  let by=0, ry=face;
   
-  avatar.position.set(pos.x,by,pos.z); avatar.rotation.y=ry; avatar.visible=third;
+  // Прыжок
+  if (isJumping) {
+    jumpY += dt * 5;
+    if (jumpY > Math.PI) { isJumping = false; jumpY = 0; by = 0; }
+    else { by = Math.sin(jumpY) * 0.8; }
+  }
+
+  // Базовые параметры ходьбы
+  const walkCycle = walkT * 1.5;
+  const legSwing = Math.sin(walkCycle) * Math.min(1, speed / 2.4) * 0.7;
+  const kneeBendL = Math.max(0, -Math.sin(walkCycle)) * Math.min(1, speed / 2.4) * 1.2;
+  const kneeBendR = Math.max(0, Math.sin(walkCycle)) * Math.min(1, speed / 2.4) * 1.2;
+  
+  const A = playerAvatar;
+  
+  // Сброс
+  A.armLGroup.rotation.set(0,0,0); A.armRGroup.rotation.set(0,0,0);
+  A.elbowL.rotation.set(0,0,0); A.elbowR.rotation.set(0,0,0);
+  A.legLGroup.rotation.set(0,0,0); A.legRGroup.rotation.set(0,0,0);
+  A.kneeL.rotation.set(0,0,0); A.kneeR.rotation.set(0,0,0);
+  A.torso.rotation.set(0,0,0);
+  A.head.rotation.set(0,0,0);
+
+  if (isShaking > 0) { 
+    isShaking -= dt; 
+    A.armLGroup.rotation.x = -1.4; 
+  }
+  else if(sitting){ 
+    A.legLGroup.rotation.x = A.legRGroup.rotation.x = -1.5; 
+    A.kneeL.rotation.x = A.kneeR.rotation.x = 1.5; 
+    A.armLGroup.rotation.x = A.armRGroup.rotation.x = -0.5; 
+    by = -0.27; // Опускаем тело
+  }
+  else if(dance>0){ 
+    dance-=dt; danceT+=dt;
+    const s=danceT*9;
+    A.legLGroup.rotation.x = Math.sin(s)*0.6; A.legRGroup.rotation.x = -Math.sin(s)*0.6;
+    A.kneeL.rotation.x = Math.max(0, Math.sin(s))*1.5; A.kneeR.rotation.x = Math.max(0, -Math.sin(s))*1.5;
+    A.armLGroup.rotation.x = -2.4+Math.sin(s)*0.5; A.armRGroup.rotation.x = -2.4-Math.sin(s)*0.5;
+    A.armLGroup.rotation.z = -0.4; A.armRGroup.rotation.z = 0.4;
+    A.elbowL.rotation.x = -0.5; A.elbowR.rotation.x = -0.5;
+    by = Math.abs(Math.sin(s))*0.1;
+    ry = face + Math.sin(danceT*3)*0.7 + danceT*1.2;
+    A.g.rotation.z = Math.sin(s)*0.06;
+  }
+  else{
+    // Ходьба
+    A.legLGroup.rotation.x = legSwing;
+    A.legRGroup.rotation.x = -legSwing;
+    A.kneeL.rotation.x = kneeBendL;
+    A.kneeR.rotation.x = kneeBendR;
+    
+    A.armLGroup.rotation.x = -legSwing * 0.8;
+    A.armRGroup.rotation.x = legSwing * 0.8;
+    A.elbowL.rotation.x = -0.2 - Math.max(0, -legSwing)*0.5;
+    A.elbowR.rotation.x = -0.2 - Math.max(0, legSwing)*0.5;
+
+    // Дыхание
+    A.torso.scale.y = 1 + Math.sin(performance.now() * 0.003) * 0.02;
+    A.torso.position.y = 1.15 + Math.sin(performance.now() * 0.003) * 0.005;
+    
+    // Наклон тела при ходьбе
+    A.torso.rotation.x = speed > 0.1 ? 0.1 : 0;
+    
+    // Поворот головы (если рядом игрок, смотрим на него)
+    if (nearRemote) {
+       const target = Math.atan2(nearRemote.r.tx - pos.x, nearRemote.r.tz - pos.z);
+       let d = target - ry;
+       d = Math.atan2(Math.sin(d), Math.cos(d));
+       A.head.rotation.y = d * 0.8;
+    } else {
+       A.head.rotation.y = Math.sin(walkT*0.5)*0.1;
+    }
+  }
+  
+  // Моргание
+  playerBlinkT -= dt;
+  if (playerBlinkT < 0) { A.eyelid.position.y = 1.66; playerBlinkT = 3 + Math.random()*4; }
+  else if (playerBlinkT < 0.1) { A.eyelid.position.y = 1.60; }
+
+  A.g.position.set(pos.x, by, pos.z); 
+  A.g.rotation.y = ry; 
+  A.g.visible = third;
   
   const eye=new THREE.Vector3(pos.x,sitting?1.25:1.62,pos.z);
   if(third){
@@ -762,7 +882,6 @@ function frame() {
   }
   sun.target.position.copy(pos);
 
-  // Рендер камеры наблюдения в ТВ (только когда мы в игре)
   if (started) {
     renderer.setRenderTarget(tvRenderTarget);
     renderer.render(scene, tvCamera);
@@ -806,7 +925,7 @@ function frame() {
   }
 
   if (myMsgSprite && myMsgTime < Date.now() - 7000) {
-    avatar.remove(myMsgSprite); myMsgSprite = null; myMsgText = '';
+    playerAvatar.g.remove(myMsgSprite); myMsgSprite = null; myMsgText = '';
   }
 
   remotes.forEach(r=>{
@@ -815,15 +934,56 @@ function frame() {
     g.position.x+=(r.tx-ox)*k; g.position.z+=(r.tz-oz)*k;
     r.speed+=(Math.hypot(g.position.x-ox,g.position.z-oz)/Math.max(dt,.001)-r.speed)*.2;
     let d=r.tf-r.face; d=Math.atan2(Math.sin(d),Math.cos(d)); r.face+=d*Math.min(1,dt*10);
-    r.t+=dt*r.speed*2.3; const A=r.a; let rby=0;
-    A.armL.rotation.z=A.armR.rotation.z=0; g.rotation.z=0;
+    r.t+=dt*r.speed*2.3; 
+    const A=r.a; 
+    let rby=0;
     
-    if (Date.now() < r.shakeUntil) { A.armL.rotation.x = -1.4; A.armL.rotation.z = 0; }
-    else if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
-    else if(r.s===1){r.dt+=dt;const s=r.dt*9;A.legL.rotation.x=Math.sin(s)*.6;A.legR.rotation.x=-Math.sin(s)*.6;A.armL.rotation.x=-2.4+Math.sin(s)*.5;A.armR.rotation.x=-2.4-Math.sin(s)*.5;A.armL.rotation.z=-.4;A.armR.rotation.z=.4;rby=Math.abs(Math.sin(s))*.1;g.rotation.z=Math.sin(s)*.06}
-    else{r.dt=0;const sw2=Math.sin(r.t)*Math.min(1,r.speed/2.4)*.8;A.legL.rotation.x=sw2;A.legR.rotation.x=-sw2;A.armL.rotation.x=-sw2*.8;A.armR.rotation.x=sw2*.8;rby=Math.abs(Math.sin(r.t))*.025*Math.min(1,r.speed/2)}
+    // Сброс
+    A.armLGroup.rotation.set(0,0,0); A.armRGroup.rotation.set(0,0,0);
+    A.elbowL.rotation.set(0,0,0); A.elbowR.rotation.set(0,0,0);
+    A.legLGroup.rotation.set(0,0,0); A.legRGroup.rotation.set(0,0,0);
+    A.kneeL.rotation.set(0,0,0); A.kneeR.rotation.set(0,0,0);
+    A.torso.rotation.set(0,0,0); A.head.rotation.set(0,0,0);
     
-    g.position.y=rby; g.rotation.y=r.face;
+    if (Date.now() < r.shakeUntil) { A.armLGroup.rotation.x = -1.4; }
+    else if(r.s===2){ 
+      A.legLGroup.rotation.x = A.legRGroup.rotation.x = -1.5; 
+      A.kneeL.rotation.x = A.kneeR.rotation.x = 1.5; 
+      A.armLGroup.rotation.x = A.armRGroup.rotation.x = -0.5; 
+      rby = -0.27; 
+    }
+    else if(r.s===1){ 
+      r.dt+=dt; const s=r.dt*9;
+      A.legLGroup.rotation.x = Math.sin(s)*0.6; A.legRGroup.rotation.x = -Math.sin(s)*0.6;
+      A.kneeL.rotation.x = Math.max(0, Math.sin(s))*1.5; A.kneeR.rotation.x = Math.max(0, -Math.sin(s))*1.5;
+      A.armLGroup.rotation.x = -2.4+Math.sin(s)*0.5; A.armRGroup.rotation.x = -2.4-Math.sin(s)*0.5;
+      A.armLGroup.rotation.z = -0.4; A.armRGroup.rotation.z = 0.4;
+      A.elbowL.rotation.x = -0.5; A.elbowR.rotation.x = -0.5;
+      rby = Math.abs(Math.sin(s))*0.1; g.rotation.z = Math.sin(s)*0.06;
+    }
+    else{
+      r.dt=0;
+      const sw = Math.sin(r.t*1.5) * Math.min(1, r.speed/2.4) * 0.7;
+      const kneeL = Math.max(0, -Math.sin(r.t*1.5)) * Math.min(1, r.speed/2.4) * 1.2;
+      const kneeR = Math.max(0, Math.sin(r.t*1.5)) * Math.min(1, r.speed/2.4) * 1.2;
+      
+      A.legLGroup.rotation.x = sw; A.legRGroup.rotation.x = -sw;
+      A.kneeL.rotation.x = kneeL; A.kneeR.rotation.x = kneeR;
+      A.armLGroup.rotation.x = -sw*0.8; A.armRGroup.rotation.x = sw*0.8;
+      A.elbowL.rotation.x = -0.2 - Math.max(0, -sw)*0.5;
+      A.elbowR.rotation.x = -0.2 - Math.max(0, sw)*0.5;
+      
+      A.torso.scale.y = 1 + Math.sin(performance.now() * 0.003) * 0.02;
+      A.torso.position.y = 1.15 + Math.sin(performance.now() * 0.003) * 0.005;
+      
+      // Моргание
+      r.blinkT -= dt;
+      if (r.blinkT < 0) { A.eyelid.position.y = 1.66; r.blinkT = 3 + Math.random()*4; }
+      else if (r.blinkT < 0.1) { A.eyelid.position.y = 1.60; }
+    }
+    
+    g.position.y = rby; 
+    g.rotation.y = r.face;
   });
 
   renderer.render(scene,camera);
