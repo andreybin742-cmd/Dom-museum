@@ -29,7 +29,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 #actDelete{background:#d9534f;color:#fff}
 #actHand{background:#4caf50;color:#fff}
 #actChat{background:#2f5d8a;color:#fff}
-#actJump{background:#fff;color:#000;display:block;padding:10px 16px;font-size:20px;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center}
+#actJump{background:#fff;color:#000;padding:10px 16px;font-size:20px;border-radius:50%;width:50px;height:50px;display:flex;align-items:center;justify-content:center}
 
 #stick{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;display:none;z-index:4;touch-action:none;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
 #knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -209,7 +209,6 @@ function setTime(night) {
   isNight = night;
   document.getElementById('timeBtn').textContent = night ? '🌙 Ночь' : '☀️ День';
   if (window.FB && window.FB.db) window.FB.set(window.FB.ref(window.FB.db, 'time'), { night });
-  
   if (night) {
     scene.background.setHex(0x0a0a0c); scene.fog.color.setHex(0x0a0a0c);
     hemiLight.intensity = 0.05; hemiLight.color.setHex(0x445566);
@@ -300,58 +299,58 @@ slots.forEach(s => {
   frames.push({ pos: new THREE.Vector3(g.position.x, 1.75, g.position.z), n: new THREE.Vector3(s.n[0], 0, s.n[1]), group: g, id: s.id });
 });
 
-/* Телевизор */
+/* ТЕЛЕВИЗОР */
 const tvGroup = new THREE.Group();
-tvGroup.position.set(0, 1.1, 0);
+tvGroup.position.set(0, 1.4, 0); // По центру, чуть выше
 scene.add(tvGroup);
-const stand = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.8, 1.2), new THREE.MeshStandardMaterial({color:0x2a1c12, roughness:.6}));
-stand.position.y = -0.6; tvGroup.add(stand);
-const tvBody = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.4, 0.8), new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:.4, metalness:.2}));
-tvGroup.add(tvBody);
+
+const stand = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.6, 1.0), new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:.6}));
+stand.position.y = -1.0; tvGroup.add(stand);
+
+// Плоский корпус (монитор)
+const tvFrame = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.0, 0.15), new THREE.MeshStandardMaterial({color:0x0a0a0a, roughness:.2, metalness:.5}));
+tvGroup.add(tvFrame);
+
+// Экран
 const tvScreenMat = new THREE.MeshStandardMaterial({color:0x000000, emissive:0x111111});
-const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.1), tvScreenMat);
-tvScreen.position.z = 0.41;
+const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.8), tvScreenMat);
+tvScreen.position.z = 0.08;
 tvGroup.add(tvScreen);
-const tvCamera = new THREE.PerspectiveCamera(70, 1.7/1.1, 0.1, 50);
-tvCamera.position.set(-W/2 + 0.5, H - 0.5, -D/2 + 0.5);
-tvCamera.lookAt(0, 0, 0);
-const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.5), new THREE.MeshStandardMaterial({color:0x333333}));
+
+// Камера наблюдения (без красного огонька, как просили)
+const tvCamera = new THREE.PerspectiveCamera(70, 3.4/1.8, 0.1, 50);
+tvCamera.position.set(-W/2 + 0.5, H - 0.5, -D/2 + 0.5); // В левом дальнем углу
+tvCamera.lookAt(0, 0, 0); // Смотрит в центр
+const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,0.6), new THREE.MeshStandardMaterial({color:0x222222}));
 camBody.position.copy(tvCamera.position);
 camBody.lookAt(0,0,0);
 scene.add(camBody);
-const camLed = new THREE.Mesh(new THREE.SphereGeometry(0.04), new THREE.MeshBasicMaterial({color:0xff0000}));
-camLed.position.set(0, 0.1, 0.26);
-camBody.add(camLed);
-const tvRenderTarget = new THREE.WebGLRenderTarget(512, 320);
+
+const tvRenderTarget = new THREE.WebGLRenderTarget(512, 256);
 tvScreenMat.map = tvRenderTarget.texture;
 tvScreenMat.emissiveMap = tvRenderTarget.texture;
 tvScreenMat.emissive.setHex(0xffffff);
 tvScreenMat.needsUpdate = true;
 
-/* --- СОЗДАНИЕ УЛУЧШЕННОГО АВАТАРА --- */
+/* --- УЛУЧШЕННЫЙ АВАТАР (Sims-like) --- */
 function createSimsAvatar(look) {
   const g = new THREE.Group();
   const M = (c, r=0.7) => new THREE.MeshStandardMaterial({color:c, roughness:r});
   const skinM = M(look.skin, 0.6), shirtM = M(look.shirt, 0.8), pantsM = M(look.pants, 0.8);
   const hairM = M(look.hair, 0.7), shoeM = M(0x151515, 0.5);
   
-  // Торс
   const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.6, 16), shirtM);
   torso.position.y = 1.15; torso.castShadow = true; g.add(torso);
   
-  // Шея
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.1, 8), skinM);
   neck.position.y = 1.48; neck.castShadow = true; g.add(neck);
   
-  // Голова
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), skinM);
   head.position.y = 1.63; head.castShadow = true; g.add(head);
   
-  // Нос
   const nose = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 0.05), skinM);
   nose.position.set(0, 1.62, 0.16); g.add(nose);
   
-  // Глаза (белки + зрачки)
   const eyeW = M(0xffffff, 0.1);
   const eyeB = M(0x111111, 0.1);
   const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeW); eyeL.position.set(-0.06, 1.66, 0.13); g.add(eyeL);
@@ -359,26 +358,20 @@ function createSimsAvatar(look) {
   const pupilL = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), eyeB); pupilL.position.set(-0.06, 1.66, 0.16); g.add(pupilL);
   const pupilR = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), eyeB); pupilR.position.set(0.06, 1.66, 0.16); g.add(pupilR);
   
-  // Веки (для моргания)
   const eyelid = new THREE.Mesh(new THREE.SphereGeometry(0.036, 8, 8, 0, Math.PI*2, 0, Math.PI/2), skinM);
-  eyelid.position.set(0, 1.66, 0.13); eyelid.scale.set(1.1, 1.1, 1.1); g.add(eyelid); // Упрощенно: будем двигать вверх/вниз
+  eyelid.position.set(0, 1.66, 0.13); g.add(eyelid);
   
-  // Рот
   const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.01, 0.01), M(0xcc3333, 0.5));
   mouth.position.set(0, 1.56, 0.15); g.add(mouth);
   
-  // Уши
   const earL = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), skinM); earL.position.set(-0.16, 1.63, 0); g.add(earL);
   const earR = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), skinM); earR.position.set(0.16, 1.63, 0); g.add(earR);
   
-  // Волосы
   const hair = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16, 0, Math.PI*2, 0, Math.PI/1.8), hairM);
   hair.position.y = 1.65; hair.scale.set(1.05, 1.1, 1.05); hair.castShadow = true; g.add(hair);
-  // Челка
   const bang = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 0.1), hairM);
   bang.position.set(0, 1.73, 0.12); g.add(bang);
 
-  // Руки (плечо, предплечье, кисть)
   const armLGroup = new THREE.Group(); armLGroup.position.set(-0.25, 1.38, 0); g.add(armLGroup);
   const armL_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.3), shirtM); armL_upper.position.y = -0.15; armL_upper.castShadow = true; armLGroup.add(armL_upper);
   const elbowL = new THREE.Group(); elbowL.position.y = -0.3; armLGroup.add(elbowL);
@@ -391,7 +384,6 @@ function createSimsAvatar(look) {
   const armR_lower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.25), skinM); armR_lower.position.y = -0.125; armR_lower.castShadow = true; elbowR.add(armR_lower);
   const handR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), skinM); handR.position.y = -0.25; elbowR.add(handR);
 
-  // Ноги (бедро, голень, стопа)
   const legLGroup = new THREE.Group(); legLGroup.position.set(-0.1, 0.85, 0); g.add(legLGroup);
   const legL_upper = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.4), pantsM); legL_upper.position.y = -0.2; legL_upper.castShadow = true; legLGroup.add(legL_upper);
   const kneeL = new THREE.Group(); kneeL.position.y = -0.4; legLGroup.add(kneeL);
@@ -715,7 +707,7 @@ document.getElementById('go').onclick=()=>{
   if(isTouch) document.getElementById('stick').style.display='block';
 };
 function applyLook() {
-  playerAvatar.g.remove(playerAvatar.g.children[0]); // Удаляем старый
+  playerAvatar.g.remove(playerAvatar.g.children[0]);
   const newAvatar = createSimsAvatar(lookOf(myK));
   playerAvatar.g.add(newAvatar.g);
   playerAvatar.head = newAvatar.head;
@@ -786,15 +778,12 @@ function frame() {
   if(speed>.15){const target=Math.atan2(vel.x,vel.z);let d=target-face;d=Math.atan2(Math.sin(d),Math.cos(d));face+=d*Math.min(1,dt*10)}
   
   let by=0, ry=face;
-  
-  // Прыжок
   if (isJumping) {
     jumpY += dt * 5;
     if (jumpY > Math.PI) { isJumping = false; jumpY = 0; by = 0; }
     else { by = Math.sin(jumpY) * 0.8; }
   }
 
-  // Базовые параметры ходьбы
   const walkCycle = walkT * 1.5;
   const legSwing = Math.sin(walkCycle) * Math.min(1, speed / 2.4) * 0.7;
   const kneeBendL = Math.max(0, -Math.sin(walkCycle)) * Math.min(1, speed / 2.4) * 1.2;
@@ -802,23 +791,18 @@ function frame() {
   
   const A = playerAvatar;
   
-  // Сброс
   A.armLGroup.rotation.set(0,0,0); A.armRGroup.rotation.set(0,0,0);
   A.elbowL.rotation.set(0,0,0); A.elbowR.rotation.set(0,0,0);
   A.legLGroup.rotation.set(0,0,0); A.legRGroup.rotation.set(0,0,0);
   A.kneeL.rotation.set(0,0,0); A.kneeR.rotation.set(0,0,0);
-  A.torso.rotation.set(0,0,0);
-  A.head.rotation.set(0,0,0);
+  A.torso.rotation.set(0,0,0); A.head.rotation.set(0,0,0);
 
-  if (isShaking > 0) { 
-    isShaking -= dt; 
-    A.armLGroup.rotation.x = -1.4; 
-  }
+  if (isShaking > 0) { isShaking -= dt; A.armLGroup.rotation.x = -1.4; }
   else if(sitting){ 
     A.legLGroup.rotation.x = A.legRGroup.rotation.x = -1.5; 
     A.kneeL.rotation.x = A.kneeR.rotation.x = 1.5; 
     A.armLGroup.rotation.x = A.armRGroup.rotation.x = -0.5; 
-    by = -0.27; // Опускаем тело
+    by = -0.27; 
   }
   else if(dance>0){ 
     dance-=dt; danceT+=dt;
@@ -833,25 +817,15 @@ function frame() {
     A.g.rotation.z = Math.sin(s)*0.06;
   }
   else{
-    // Ходьба
-    A.legLGroup.rotation.x = legSwing;
-    A.legRGroup.rotation.x = -legSwing;
-    A.kneeL.rotation.x = kneeBendL;
-    A.kneeR.rotation.x = kneeBendR;
-    
-    A.armLGroup.rotation.x = -legSwing * 0.8;
-    A.armRGroup.rotation.x = legSwing * 0.8;
+    A.legLGroup.rotation.x = legSwing; A.legRGroup.rotation.x = -legSwing;
+    A.kneeL.rotation.x = kneeBendL; A.kneeR.rotation.x = kneeBendR;
+    A.armLGroup.rotation.x = -legSwing * 0.8; A.armRGroup.rotation.x = legSwing * 0.8;
     A.elbowL.rotation.x = -0.2 - Math.max(0, -legSwing)*0.5;
     A.elbowR.rotation.x = -0.2 - Math.max(0, legSwing)*0.5;
-
-    // Дыхание
     A.torso.scale.y = 1 + Math.sin(performance.now() * 0.003) * 0.02;
     A.torso.position.y = 1.15 + Math.sin(performance.now() * 0.003) * 0.005;
-    
-    // Наклон тела при ходьбе
     A.torso.rotation.x = speed > 0.1 ? 0.1 : 0;
     
-    // Поворот головы (если рядом игрок, смотрим на него)
     if (nearRemote) {
        const target = Math.atan2(nearRemote.r.tx - pos.x, nearRemote.r.tz - pos.z);
        let d = target - ry;
@@ -862,7 +836,6 @@ function frame() {
     }
   }
   
-  // Моргание
   playerBlinkT -= dt;
   if (playerBlinkT < 0) { A.eyelid.position.y = 1.66; playerBlinkT = 3 + Math.random()*4; }
   else if (playerBlinkT < 0.1) { A.eyelid.position.y = 1.60; }
@@ -938,7 +911,6 @@ function frame() {
     const A=r.a; 
     let rby=0;
     
-    // Сброс
     A.armLGroup.rotation.set(0,0,0); A.armRGroup.rotation.set(0,0,0);
     A.elbowL.rotation.set(0,0,0); A.elbowR.rotation.set(0,0,0);
     A.legLGroup.rotation.set(0,0,0); A.legRGroup.rotation.set(0,0,0);
@@ -976,7 +948,6 @@ function frame() {
       A.torso.scale.y = 1 + Math.sin(performance.now() * 0.003) * 0.02;
       A.torso.position.y = 1.15 + Math.sin(performance.now() * 0.003) * 0.005;
       
-      // Моргание
       r.blinkT -= dt;
       if (r.blinkT < 0) { A.eyelid.position.y = 1.66; r.blinkT = 3 + Math.random()*4; }
       else if (r.blinkT < 0.1) { A.eyelid.position.y = 1.60; }
