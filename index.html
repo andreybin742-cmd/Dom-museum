@@ -22,13 +22,15 @@ button:active{transform:scale(.96)}
 
 input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px;width:210px;text-align:center}
 
-/* Экранные кнопки действий */
+/* Кнопки действий */
 #actionsArea{position:fixed;right:16px;bottom:calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;z-index:5;align-items:flex-end;pointer-events:none}
 #actionsArea button{pointer-events:auto;margin:0;font-size:15px;padding:14px 20px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,.4);font-weight:bold;display:none;border:2px solid rgba(255,255,255,.2)}
+#actSit{background:#e8c27a;color:#111}
 #actView{background:var(--ac);color:#111}
-#actDelete{background:#d9534f;color:#fff;display:none}
+#actDelete{background:#d9534f;color:#fff}
 #actHand{background:#4caf50;color:#fff}
 #actChat{background:#2f5d8a;color:#fff}
+#actTv{background:#8e44ad;color:#fff}
 
 #stick{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;display:none;z-index:4;touch-action:none;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
 #knob{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.9;box-shadow:0 2px 10px rgba(0,0,0,.5)}
@@ -36,12 +38,10 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 #hint{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:12px 20px;display:none;z-index:3;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.7);border-radius:20px}
 #hint b{color:var(--ac)}
 
-/* Просмотр картины */
 #lb{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:8;padding:16px}
 #lb img{max-width:94vw;max-height:80vh;border:10px solid #f3efe6;box-shadow:0 20px 60px #000;border-radius:4px}
 #lbCloseBtn{background:#fff;color:#000;padding:12px 30px;font-size:16px;border-radius:30px;margin-top:20px}
 
-/* Галерея */
 #gal{position:fixed;inset:0;background:rgba(10,10,12,.95);display:none;flex-direction:column;z-index:9;padding:20px;overflow-y:auto}
 #gal h2{text-align:center;margin:0 0 20px 0;color:var(--ac)}
 #galGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;padding-bottom:40px}
@@ -50,7 +50,6 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 .gal-del{position:absolute;top:5px;right:5px;background:rgba(217,83,79,.9);color:white;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:bold}
 #galClose{position:fixed;top:20px;right:20px;z-index:10;border-radius:50%;width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;font-size:20px}
 
-/* Модалка ввода сообщения */
 #chatModal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:11;padding:20px}
 #chatModal .glass{padding:20px;width:100%;max-width:400px;text-align:center}
 #chatInput{width:100%;margin-bottom:16px;padding:12px;font-size:16px}
@@ -58,7 +57,6 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 
 #load{position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:6;padding:8px 16px;display:none;font-size:14px;font-weight:600;background:rgba(0,0,0,.8);border-radius:20px}
 
-/* Всплывающий текст */
 .popup-text{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);background:rgba(232,194,122,.95);color:#111;padding:12px 24px;border-radius:30px;font-weight:bold;font-size:16px;z-index:7;pointer-events:none;animation:popup 2s forwards}
 @keyframes popup{0%{opacity:0;transform:translate(-50%,-30%)}10%{opacity:1;transform:translate(-50%,-50%)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
 </style></head><body>
@@ -84,10 +82,12 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 <button id="go" style="width:100%;padding:16px;font-size:18px">Войти в музей</button></div></div>
 
 <div id="actionsArea">
+  <button id="actTv">📺 Включить видео</button>
   <button id="actHand">🤝 Пожать руку</button>
   <button id="actDelete">🗑 Удалить картину</button>
   <button id="actView">👁 Посмотреть</button>
   <button id="actAdd">📷 Повесить фото</button>
+  <button id="actSit">🪑 Присесть</button>
   <button id="actChat" style="display:block">💬 Написать</button>
 </div>
 
@@ -119,6 +119,7 @@ input{font:inherit;color:var(--tx);background:rgba(0,0,0,.3);border:1px solid va
 <div id="load" class="glass">Загружаю…</div>
 
 <input id="file" type="file" accept="image/*" hidden>
+<input id="fileVideo" type="file" accept="video/*" hidden>
 
 <!-- Firebase SDK -->
 <script type="module">
@@ -195,9 +196,14 @@ benches.forEach(([x,z])=>{const g=new THREE.Group();
 const rc=cvs(256,256),rx=rc.getContext('2d');rx.fillStyle='#6b2b2b';rx.fillRect(0,0,256,256);rx.strokeStyle='#d9b26a';rx.lineWidth=6;rx.strokeRect(12,12,232,232);rx.lineWidth=2;rx.strokeRect(26,26,204,204);
 const rug=new THREE.Mesh(new THREE.PlaneGeometry(14,3.4),new THREE.MeshStandardMaterial({map:tex(rc),roughness:1}));rug.rotation.x=-Math.PI/2;rug.position.y=.005;rug.receiveShadow=true;scene.add(rug);
 
-/* Слоты */
+/* Картины (слоты) */
 const slots=[];const N=6;
-for(let i=0;i<N;i++){const x=-W/2+(i+.5)*W/N;slots.push({id:'n'+i,p:[x,-D/2],n:[0,1],r:0});slots.push({id:'s'+i,p:[x,D/2],n:[0,-1],r:Math.PI})}
+// Убираем центральный слот на задней стене под телевизор (n2)
+for(let i=0;i<N;i++){
+  const x=-W/2+(i+.5)*W/N;
+  if(i!==2) slots.push({id:'n'+i,p:[x,-D/2],n:[0,1],r:0});
+  slots.push({id:'s'+i,p:[x,D/2],n:[0,-1],r:Math.PI});
+}
 [-3.2,3.2].forEach((z,idx)=>{slots.push({id:'w'+idx,p:[-W/2,z],n:[1,0],r:Math.PI/2});slots.push({id:'e'+idx,p:[W/2,z],n:[-1,0],r:-Math.PI/2})});
 
 const framesGroup=new THREE.Group();scene.add(framesGroup);let frames=[];
@@ -216,7 +222,6 @@ function createFrameBase(slot){
 function addArtToFrame(g, img, title, id, slotId){
   while(g.children.length) g.remove(g.children[0]);
   g.userData.art = { src:img.src, title, id, slotId };
-
   const a=img.width/img.height;let w=3,h=3/a;if(h>2.2){h=2.2;w=2.2*a}
   const mat=new THREE.Mesh(new THREE.BoxGeometry(w+.5,h+.5,.04),matMat);mat.position.z=.02;g.add(mat);
   const t=new THREE.Texture(img);t.encoding=THREE.sRGBEncoding;t.anisotropy=aniso;t.needsUpdate=true;
@@ -245,6 +250,51 @@ slots.forEach(s => {
   frameMap.set(s.id, g);
   frames.push({ pos: new THREE.Vector3(g.position.x, 1.75, g.position.z), n: new THREE.Vector3(s.n[0], 0, s.n[1]), group: g, id: s.id });
 });
+
+/* Телевизор */
+const tvGroup = new THREE.Group();
+tvGroup.position.set(0, 2.2, -D/2 + 0.1); // В центре задней стены
+scene.add(tvGroup);
+const tvMat = new THREE.MeshStandardMaterial({color:0x111111, roughness:.2, metalness:.5});
+const tvScreenMat = new THREE.MeshStandardMaterial({color:0x000000, emissive:0x333333});
+const tvBody = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.0, .2), tvMat);
+tvGroup.add(tvBody);
+const tvScreen = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 2.6), tvScreenMat);
+tvScreen.position.z = .11;
+tvGroup.add(tvScreen);
+tvGroup.userData = { screen: tvScreen, videoEl: null, texture: null };
+
+function loadVideoToTV(src) {
+  if (tvGroup.userData.videoEl) {
+    tvGroup.userData.videoEl.pause();
+    tvGroup.userData.videoEl.remove();
+  }
+  if (!src) {
+    tvGroup.userData.screen.material.map = null;
+    tvGroup.userData.screen.material.emissive.setHex(0x333333);
+    tvGroup.userData.screen.material.needsUpdate = true;
+    return;
+  }
+  const video = document.createElement('video');
+  video.src = src;
+  video.crossOrigin = "anonymous";
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.play();
+  
+  const vTex = new THREE.VideoTexture(video);
+  vTex.minFilter = THREE.LinearFilter;
+  vTex.magFilter = THREE.LinearFilter;
+  vTex.format = THREE.RGBFormat;
+  
+  tvGroup.userData.screen.material.map = vTex;
+  tvGroup.userData.screen.material.emissive.setHex(0xffffff);
+  tvGroup.userData.screen.material.emissiveMap = vTex;
+  tvGroup.userData.screen.material.needsUpdate = true;
+  tvGroup.userData.videoEl = video;
+  tvGroup.userData.texture = vTex;
+}
 
 /* Загрузка фото */
 const fileInput = document.getElementById('file');
@@ -288,6 +338,78 @@ fileInput.addEventListener('change', async (e) => {
     }
   }
   L.style.display='none'; e.target.value=''; pendingSlotId = null;
+});
+
+/* Загрузка видео */
+const fileVideoInput = document.getElementById('fileVideo');
+fileVideoInput.addEventListener('change', async (e) => {
+  if(!e.target.files.length) return;
+  const file = e.target.files[0];
+  const L = document.getElementById('load'); 
+  L.style.display='block'; L.textContent='Обрабатываю видео (до 10 сек)...';
+  
+  try {
+    // Создаем видео элемент для захвата кадров
+    const video = document.createElement('video');
+    video.src = URL.createObjectURL(file);
+    video.muted = true;
+    
+    await new Promise(r => { video.onloadedmetadata = r; });
+    
+    // Ограничиваем длительность 10 секундами
+    const duration = Math.min(video.duration, 10);
+    video.currentTime = 0;
+    
+    await new Promise(r => { video.onseeked = r; });
+    
+    // Создаем canvas для записи
+    const canvas = document.createElement('canvas');
+    canvas.width = 480; 
+    canvas.height = Math.round(480 * (video.videoHeight / video.videoWidth));
+    const ctx = canvas.getContext('2d');
+    
+    // Используем MediaRecorder для сжатия
+    const stream = canvas.captureStream(15); // 15 fps
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+    const chunks = [];
+    
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    
+    recorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result;
+        if (window.FB && window.FB.db) {
+          await window.FB.set(window.FB.ref(window.FB.db, 'tv'), { src: base64, ts: Date.now() });
+          L.style.display='none'; 
+          showPopup('📺 Видео установлено!');
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+    
+    recorder.start();
+    video.play();
+    
+    let start = performance.now();
+    const drawFrame = () => {
+      if (video.currentTime >= duration || performance.now() - start > duration * 1000) {
+        recorder.stop();
+        video.pause();
+        return;
+      }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(drawFrame);
+    };
+    drawFrame();
+    
+  } catch(err) {
+    console.error(err);
+    L.style.display='none';
+    alert('Ошибка при обработке видео. Попробуйте файл поменьше.');
+  }
+  e.target.value = '';
 });
 
 function tryImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
@@ -355,7 +477,7 @@ function makeMessageSprite(text) {
   const c = cvs(512, 128), x = c.getContext('2d');
   x.fillStyle = 'rgba(255,255,255,0.95)';
   x.beginPath(); x.roundRect(10,10,492,108,20); x.fill();
-  x.beginPath(); x.moveTo(256,118); x.lineTo(240,90); x.lineTo(272,90); x.fill(); // Хвостик
+  x.beginPath(); x.moveTo(256,118); x.lineTo(240,90); x.lineTo(272,90); x.fill();
   x.fillStyle = '#111'; x.font = 'bold 40px system-ui,sans-serif';
   x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText(text.slice(0, 30), 256, 60);
@@ -376,7 +498,6 @@ function upsertRemote(id, pr) {
   r.tx = pr.x; r.tz = pr.z; r.tf = pr.f||0; r.s = pr.s||0;
   if (pr.shake) r.shakeUntil = pr.shake;
   
-  // Обработка сообщений
   if (pr.msg && pr.msgT > Date.now() - 7000) {
     if (!r.msgSprite || r.msgSprite.userData.text !== pr.msg) {
       if (r.msgSprite) r.a.g.remove(r.msgSprite);
@@ -408,8 +529,17 @@ async function connect() {
     document.getElementById('who').textContent = '🏛 Музей' + (names.length ? ' · в зале: ' + names.join(', ') : '');
   });
 
-  onValue(ref(db, 'paintings'), (snap) => {
-    applyPaintings(snap.val() || {});
+  onValue(ref(db, 'paintings'), (snap) => { applyPaintings(snap.val() || {}); });
+
+  // Синхронизация ТВ
+  onValue(ref(db, 'tv'), (snap) => {
+    const data = snap.val();
+    if (data && data.src) {
+      if (!tvGroup.userData.lastTs || tvGroup.userData.lastTs !== data.ts) {
+        tvGroup.userData.lastTs = data.ts;
+        loadVideoToTV(data.src);
+      }
+    }
   });
 
   setInterval(() => {
@@ -465,7 +595,7 @@ const armL=limb(-.27,1.42,.55,.055,shirt),armR=limb(.27,1.42,.55,.055,shirt),leg
 scene.add(avatar);
 
 const pos=new THREE.Vector3(0,0,5.2);let yaw=0,pitch=.25,third=true,started=false,vel=new THREE.Vector3(),face=0,walkT=0;
-let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null,nearFrame=null,nearRemote=null;
+let dance=0,danceT=0,sitting=null,sitSide=1,nearBench=null,nearFrame=null,nearRemote=null,nearTv=false;
 let isShaking = 0; 
 let myMsgText = '', myMsgTime = 0, myMsgSprite = null;
 const keys={};const isTouch=matchMedia('(pointer:coarse)').matches;
@@ -476,12 +606,14 @@ renderer.domElement.addEventListener('mousedown', e => { if(e.button===0 && !lbO
 addEventListener('mouseup', () => isDragging=false);
 addEventListener('mousemove', e => { if(isDragging) { yaw -= e.movementX*.003; pitch += e.movementY*.003; clampP(); } });
 
-// Кнопки действий
+// Кнопки
 const btnView = document.getElementById('actView');
 const btnAdd = document.getElementById('actAdd');
 const btnDelete = document.getElementById('actDelete');
 const btnHand = document.getElementById('actHand');
 const btnChat = document.getElementById('actChat');
+const btnSit = document.getElementById('actSit');
+const btnTv = document.getElementById('actTv');
 
 btnView.onclick = () => { if(nearFrame && nearFrame.userData.art) openLb(nearFrame.userData.art); };
 btnAdd.onclick = () => { if(nearFrame) { pendingSlotId = nearFrame.userData.slotId; fileInput.click(); } };
@@ -490,6 +622,8 @@ btnDelete.onclick = () => {
     if(confirm('Удалить эту картину?')) window.FB.remove(window.FB.ref(window.FB.db, 'paintings/' + nearFrame.userData.slotId));
   }
 };
+btnSit.onclick = toggleSit;
+btnTv.onclick = () => { fileVideoInput.click(); };
 btnHand.onclick = () => {
   if (nearRemote && isShaking <= 0) {
     isShaking = 2; 
@@ -502,7 +636,6 @@ btnChat.onclick = () => {
   document.getElementById('chatInput').focus();
 };
 
-// Чат
 document.getElementById('chatSend').onclick = () => {
   const val = document.getElementById('chatInput').value.trim();
   if (val) {
@@ -510,7 +643,6 @@ document.getElementById('chatSend').onclick = () => {
     if (myMsgSprite) avatar.remove(myMsgSprite);
     myMsgSprite = makeMessageSprite(myMsgText);
     avatar.add(myMsgSprite);
-    // Сразу отправляем в базу
     window.FB.set(window.FB.ref(window.FB.db, 'users/' + myId), { id: myId, x: +pos.x.toFixed(2), z: +pos.z.toFixed(2), f: +face.toFixed(2), s: sitting?2:dance>0?1:0, n: myName, k: myK, t: Date.now(), msg: myMsgText, msgT: myMsgTime });
   }
   document.getElementById('chatModal').style.display = 'none';
@@ -524,6 +656,11 @@ addEventListener('keydown', e => {
   if (e.code==='KeyF') toggleSit();
   if (e.code==='KeyG') startDance();
   if (e.code==='KeyR' && nearFrame && nearFrame.userData.art) btnDelete.click();
+  if (e.code==='KeyE') {
+    if(nearTv) btnTv.click();
+    else if(nearRemote) btnHand.click();
+    else if(nearFrame) { if(nearFrame.userData.art) btnView.click(); else btnAdd.click(); }
+  }
   if(e.code==='Escape') { closeLb(); gal.style.display='none'; document.getElementById('chatModal').style.display='none'; }
 });
 addEventListener('keyup', e=>keys[e.code]=false);
@@ -537,9 +674,21 @@ function showPopup(txt) {
 function clampP(){pitch=Math.max(third?.05:-1.3,Math.min(third?1.1:1.3,pitch))}
 function startDance(){if(sitting||!started||lbOpen)return;dance=5;danceT=0;third=true;if(pitch<.1)pitch=.2}
 function standUp(){if(!sitting)return;pos.z=sitting[1]+sitSide*.95;sitting=null}
-function toggleSit(){if(!started||lbOpen)return;if(sitting){standUp();return}if(!nearBench||dance>0)return;const b=nearBench;sitting=b;pos.x=Math.max(b[0]-.85,Math.min(b[0]+.85,pos.x));sitSide=pos.z>=b[1]?1:-1;pos.z=b[1];face=sitSide>0?0:Math.PI;vel.set(0,0,0)}
+function toggleSit(){
+  if(!started||lbOpen)return;
+  if(sitting){standUp();return}
+  if(nearBench && dance<=0){
+    const b=nearBench;sitting=b;
+    pos.x=Math.max(b[0]-.85,Math.min(b[0]+.85,pos.x));
+    sitSide=pos.z>=b[1]?1:-1;
+    pos.z=b[1];
+    face=sitSide>0?0:Math.PI;
+    vel.set(0,0,0);
+  } else if(!nearBench) {
+    showPopup('Нужно подойти к лавочке');
+  }
+}
 
-/* Вход */
 const startEl=document.getElementById('start');
 document.getElementById('go').onclick=()=>{
   if(!authed){
@@ -563,7 +712,7 @@ function applyLook() {
   labelObj = label(myName); avatar.add(labelObj);
 }
 
-/* Тач управление */
+/* Тач */
 let joy=null,look=null,jv={x:0,y:0};const stick=document.getElementById('stick'),knob=document.getElementById('knob');
 addEventListener('touchstart',e=>{
   if(!started||gal.style.display==='flex'||document.getElementById('chatModal').style.display==='flex')return;
@@ -590,13 +739,11 @@ addEventListener('touchend',e=>{
   }
 });
 
-/* Просмотр */
 const lb=document.getElementById('lb');let lbOpen=false;
 function openLb(art){ lbOpen=true; document.getElementById('lbImg').src=art.src; lb.style.display='flex'; }
 function closeLb(){if(!lbOpen)return;lbOpen=false;lb.style.display='none';}
 document.getElementById('lbCloseBtn').onclick=closeLb;
 
-/* Цикл */
 const clock=new THREE.Clock(),hint=document.getElementById('hint'),hintTx=document.getElementById('hintTx');
 function blocked(x,z){if(Math.abs(x)>W/2-.6||Math.abs(z)>D/2-.6)return true;return benches.some(([bx,bz])=>Math.abs(x-bx)<1.2+.3&&Math.abs(z-bz)<.35+.3)}
 
@@ -624,10 +771,7 @@ function frame() {
   let by=Math.abs(Math.sin(walkT))*.025*Math.min(1,speed/2),ry=face;
   armL.rotation.z=armR.rotation.z=0;avatar.rotation.z=0;
   
-  if (isShaking > 0) {
-    isShaking -= dt;
-    armL.rotation.x = -1.4; armL.rotation.z = 0; // ЛЕВАЯ рука вперед
-  }
+  if (isShaking > 0) { isShaking -= dt; armL.rotation.x = -1.4; armL.rotation.z = 0; }
   else if(sitting){legL.rotation.x=legR.rotation.x=-1.5;armL.rotation.x=armR.rotation.x=-.5;by=-.27}
   else if(dance>0){dance-=dt;danceT+=dt;const s=danceT*9;legL.rotation.x=Math.sin(s)*.6;legR.rotation.x=-Math.sin(s)*.6;armL.rotation.x=-2.4+Math.sin(s)*.5;armR.rotation.x=-2.4-Math.sin(s)*.5;armL.rotation.z=-.4;armR.rotation.z=.4;by=Math.abs(Math.sin(s))*.1;ry=face+Math.sin(danceT*3)*.7+danceT*1.2;avatar.rotation.z=Math.sin(s)*.06}
   else{legL.rotation.x=sw;legR.rotation.x=-sw;armL.rotation.x=-sw*.8;armR.rotation.x=sw*.8}
@@ -645,13 +789,19 @@ function frame() {
   }
   sun.target.position.copy(pos);
 
-  nearFrame=null; nearBench=null; nearRemote=null; 
+  nearFrame=null; nearBench=null; nearRemote=null; nearTv=false;
   let best=3.4; const dir=new THREE.Vector3(-sy,0,-cy);
   
-  frames.forEach(f=>{
-    const v=f.pos.clone().sub(pos); v.y=0; const d=v.length();
-    if(d<best && v.normalize().dot(dir)>.35 && f.n.dot(pos.clone().sub(f.pos).setY(0))>0){best=d;nearFrame=f.group;}
-  });
+  // ТВ
+  const vTv = new THREE.Vector3(0, 2.2, -D/2).sub(pos); vTv.y=0; 
+  if(vTv.length()<4 && vTv.normalize().dot(dir)>.35 && new THREE.Vector3(0,0,1).dot(pos.clone().sub(new THREE.Vector3(0,0,-D/2)).setY(0))>0) nearTv = true;
+
+  if(!nearTv) {
+    frames.forEach(f=>{
+      const v=f.pos.clone().sub(pos); v.y=0; const d=v.length();
+      if(d<best && v.normalize().dot(dir)>.35 && f.n.dot(pos.clone().sub(f.pos).setY(0))>0){best=d;nearFrame=f.group;}
+    });
+  }
   
   if(!sitting && dance<=0) benches.forEach(b=>{if(Math.abs(pos.x-b[0])<2.1&&Math.abs(pos.z-b[1])<1.35)nearBench=b});
   
@@ -662,19 +812,19 @@ function frame() {
     if (d < nearestDist) { nearestDist = d; nearRemote = { id: id, n: r.n, r: r }; }
   });
 
-  // Обновление видимости кнопок
+  btnTv.style.display = nearTv ? 'block' : 'none';
   btnHand.style.display = nearRemote ? 'block' : 'none';
   btnView.style.display = (nearFrame && nearFrame.userData.art) ? 'block' : 'none';
   btnDelete.style.display = (nearFrame && nearFrame.userData.art) ? 'block' : 'none';
   btnAdd.style.display = (nearFrame && !nearFrame.userData.art) ? 'block' : 'none';
-  
-  // Кнопка "Написать" видна всегда, но сдвигается, если есть другие кнопки
-  // (Решается средствами CSS, так как кнопки в контейнере flex)
+  btnSit.style.display = (sitting || nearBench) ? 'block' : 'none';
+  btnSit.textContent = sitting ? '🧍 Встать' : '🪑 Присесть';
 
   if (isTouch) {
     hint.style.display = 'none';
   } else {
-    if(nearRemote) { hint.style.display='block'; hintTx.innerHTML = 'Нажмите <b>E</b>, чтобы пожать руку'; }
+    if(nearTv) { hint.style.display='block'; hintTx.innerHTML = 'Нажмите <b>E</b>, чтобы загрузить видео на ТВ'; }
+    else if(nearRemote) { hint.style.display='block'; hintTx.innerHTML = 'Нажмите <b>E</b>, чтобы пожать руку'; }
     else if(nearFrame && !lbOpen) {
       hint.style.display='block';
       if(nearFrame.userData.art) hintTx.innerHTML = '<b>E</b> — смотреть · <b>R</b> — удалить';
@@ -683,11 +833,8 @@ function frame() {
     else hint.style.display='none';
   }
 
-  // Обновление сообщения над своим персонажем
   if (myMsgSprite && myMsgTime < Date.now() - 7000) {
-    avatar.remove(myMsgSprite);
-    myMsgSprite = null;
-    myMsgText = '';
+    avatar.remove(myMsgSprite); myMsgSprite = null; myMsgText = '';
   }
 
   remotes.forEach(r=>{
@@ -699,18 +846,13 @@ function frame() {
     r.t+=dt*r.speed*2.3; const A=r.a; let rby=0;
     A.armL.rotation.z=A.armR.rotation.z=0; g.rotation.z=0;
     
-    if (Date.now() < r.shakeUntil) {
-      A.armL.rotation.x = -1.4; A.armL.rotation.z = 0;
-    } else if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
+    if (Date.now() < r.shakeUntil) { A.armL.rotation.x = -1.4; A.armL.rotation.z = 0; }
+    else if(r.s===2){A.legL.rotation.x=A.legR.rotation.x=-1.5;A.armL.rotation.x=A.armR.rotation.x=-.5;rby=-.27}
     else if(r.s===1){r.dt+=dt;const s=r.dt*9;A.legL.rotation.x=Math.sin(s)*.6;A.legR.rotation.x=-Math.sin(s)*.6;A.armL.rotation.x=-2.4+Math.sin(s)*.5;A.armR.rotation.x=-2.4-Math.sin(s)*.5;A.armL.rotation.z=-.4;A.armR.rotation.z=.4;rby=Math.abs(Math.sin(s))*.1;g.rotation.z=Math.sin(s)*.06}
     else{r.dt=0;const sw2=Math.sin(r.t)*Math.min(1,r.speed/2.4)*.8;A.legL.rotation.x=sw2;A.legR.rotation.x=-sw2;A.armL.rotation.x=-sw2*.8;A.armR.rotation.x=sw2*.8;rby=Math.abs(Math.sin(r.t))*.025*Math.min(1,r.speed/2)}
     
     g.position.y=rby; g.rotation.y=r.face;
   });
-
-  const showSit=started&&(sitting||nearBench)?'block':'none';
-  const sitBtn = document.getElementById('sitBtn');
-  if(sitBtn) sitBtn.style.display=showSit;
 
   renderer.render(scene,camera);
 }
